@@ -13,14 +13,25 @@
   - 앱 화면(놀이 · 커리큘럼): 서버에서 늘 새로 받아서 바로 바뀌어요.
   - 앱 자체(`android/`가 바뀐 경우): GitHub Actions가 서명한 APK를 Releases에 올리고, 앱이 켜질 때 새 버전을 받을지 물어요(아래 3 참고).
 
-## 1. NAS에 서버 올리기 (Docker)
+## NAS별로 다른 점
+
+| | 시놀로지 (DSM 7.2+) | 유그린 (UGOS Pro) |
+|---|---|---|
+| 서버(Docker) | Container Manager → 프로젝트 | Docker → 프로젝트 (같은 compose 내용을 붙여 넣기) |
+| 쓰는 파일 | `docker-compose.yml` | `docker-compose.ugreen.yml` (서버 + HTTPS 입구) |
+| 바깥 주소(DDNS) | Synology DDNS (`*.synology.me`, 무료) | UGOS의 DDNS에 DuckDNS · No-IP 등 외부 서비스 계정을 넣어요 |
+| HTTPS 인증서 · 역방향 프록시 | DSM에 들어 있음 | 없어요 → Nginx Proxy Manager 컨테이너가 대신해요 |
+| 자동 업데이트 | 같아요 | 같아요 |
+
+두 곳 모두 compose 파일 하나만 있으면 돼요. 이미지를 직접 빌드하지 않고 `node:22-alpine`에 git을 깔아 저장소를 받는 방식이라, 프로젝트 화면이 빌드를 지원하지 않아도 돼요. 유그린은 아래 "유그린 NAS"로 바로 가세요.
+
+## 1. NAS에 서버 올리기 (Docker) — 시놀로지
 
 시놀로지(DSM 7.2 이상, Container Manager)를 기준으로 적었어요. QNAP은 Container Station에서 같은 `docker-compose.yml`로 "애플리케이션 만들기"를 하면 돼요.
 
 1. 패키지 센터에서 **Container Manager**를 설치해요.
-2. File Station에서 `docker/dotori` 폴더를 만들고, 저장소에서 아래 3개만 올려요(통째로 올려도 돼요).
-   - `Dockerfile`, `docker-compose.yml`, `tools/runner.js`(`tools` 폴더째로)
-   - 앱 파일은 컨테이너가 처음 켜질 때 GitHub에서 직접 받아요(1~2분). 그래서 NAS가 인터넷에 연결돼 있어야 해요.
+2. File Station에서 `docker/dotori` 폴더를 만들고, 저장소의 `docker-compose.yml` 하나만 올려요.
+   - 앱 파일은 컨테이너가 켜질 때 GitHub에서 직접 받아요(1~2분). 그래서 NAS가 인터넷에 연결돼 있어야 해요.
    - `data/`는 처음 실행할 때 생겨요.
 3. Container Manager → **프로젝트** → **생성**
    - 경로: `docker/dotori`
@@ -34,13 +45,13 @@
 Container Manager → 컨테이너 → `dotori` → **터미널** → 만들기(`sh`)에서 아래를 입력해요. 아이디와 비밀번호는 직접 정해요.
 
 ```
-node tools/make-admin.js <아이디> <비밀번호> 관리자
+node /app/src/tools/make-admin.js <아이디> <비밀번호> 관리자
 ```
 
 SSH로 접속했다면:
 
 ```bash
-sudo docker exec -it dotori node tools/make-admin.js <아이디> <비밀번호> 관리자
+sudo docker exec -it dotori node /app/src/tools/make-admin.js <아이디> <비밀번호> 관리자
 ```
 
 ### 자동 업데이트
@@ -64,7 +75,7 @@ sudo docker exec -it dotori node tools/make-admin.js <아이디> <비밀번호> 
 | `BRANCH` | `main` | 따라갈 브랜치 |
 | `REPO_URL` | 이 저장소 | 받을 저장소 주소 |
 
-실행기(`tools/runner.js`)나 `Dockerfile`이 바뀐 경우에만 프로젝트에서 **작업 → 빌드**(또는 `docker compose up -d --build`)를 한 번 해 주세요. 저장소가 비공개로 바뀌면 받을 수 없으니 공개로 두어야 해요.
+실행기(`tools/runner.js`)가 바뀐 커밋을 받으면 실행기가 컨테이너를 끝내고, Docker가 컨테이너를 다시 켜면서 새 실행기로 돌아요(`restart: unless-stopped`). compose 파일 자체를 바꿨을 때만 프로젝트를 다시 만들어(또는 `docker compose up -d`) 주세요. 저장소가 비공개로 바뀌면 받을 수 없으니 공개로 두어야 해요.
 
 ### 백업
 
@@ -89,6 +100,71 @@ sudo docker exec -it dotori node tools/make-admin.js <아이디> <비밀번호> 
 6. 휴대폰 데이터로 `https://dotori-home.synology.me`를 열어 로그인 화면이 나오는지 확인해요.
 
 서버는 `X-Forwarded-Proto: https`를 보고 로그인 쿠키에 `Secure`를 붙여요. 로그인 실패가 잦은 IP는 10분 동안 막아요.
+
+## 유그린 NAS (UGOS Pro)
+
+UGOS Pro는 Docker와 DDNS가 있지만, 시놀로지의 역방향 프록시 · Let's Encrypt 자동 발급에 해당하는 기능이 없어요(2026년 11월 1.21.x 기준). 그래서 `docker-compose.ugreen.yml`에 **Nginx Proxy Manager**(HTTPS 입구, 인증서 자동 발급 · 갱신)를 함께 넣었어요.
+
+```
+밖(https 443) ─공유기─▶ NAS 8443 ─▶ dotori-proxy(인증서) ─▶ dotori:5173
+밖(http 80)   ─공유기─▶ NAS 8080 ─▶ dotori-proxy (인증서 발급 · https로 넘기기)
+집 와이파이   ──────────▶ NAS 5173 ─▶ dotori (http)
+```
+
+### 0. 확인할 것
+
+- **Docker를 쓸 수 있는 모델**이어야 해요(앱 센터에 Docker가 보여야 해요). DXP 시리즈는 되고, DH 시리즈 중 일부(DH2300 등)는 Docker가 없어요.
+- 집 인터넷에 **공인 IP**가 있어야 밖에서 들어올 수 있어요. 공유기 관리 화면의 WAN(외부) IP가 `100.64.x.x` ~ `100.127.x.x`나 `10.x.x.x` · `192.168.x.x`이면 공인 IP가 아니에요. 이때는 통신사에 공인 IP를 요청하거나, Tailscale 같은 VPN으로 접속해야 해요.
+- UGREENlink(유그린 원격 접속)는 NAS 관리 화면 · 유그린 앱용이라, 도토리숲 같은 직접 띄운 컨테이너를 밖에 여는 데는 쓸 수 없어요.
+
+### 1. 서버 올리기
+
+1. 앱 센터에서 **Docker**를 설치해요.
+2. **Docker → 프로젝트 → 생성**
+   - 프로젝트 이름: `dotori`
+   - 저장 위치: 원하는 공유 폴더(예: `docker/dotori`). 이 폴더 아래에 `data/`(기록) · `proxy/`(인증서)가 생겨요.
+   - Compose 설정: 저장소의 `docker-compose.ugreen.yml` 내용을 통째로 붙여 넣어요.
+3. **배포(Deploy)**를 누르면 `dotori` · `dotori-proxy` 두 컨테이너가 켜져요. 처음에는 저장소를 받느라 1~2분 걸려요.
+4. 같은 와이파이의 컴퓨터에서 `http://<NAS 내부 IP>:5173`을 열어 로그인 화면이 나오면 성공이에요.
+
+관리자 계정은 **Docker → 컨테이너 → dotori → 터미널**에서 만들어요.
+
+```
+node /app/src/tools/make-admin.js <아이디> <비밀번호> 관리자
+```
+
+### 2. 바깥 주소(DDNS) 만들기
+
+1. https://www.duckdns.org 에서 로그인하고 하위 도메인을 하나 만들어요(예: `dotori-home` → `dotori-home.duckdns.org`). 화면의 **token**을 적어 둬요.
+2. UGOS Pro **설정 → 원격 접속(장치 연결) → DDNS**에서 추가 → 서비스 공급자 **DuckDNS** → 도메인과 token을 넣어요. 집 IP가 바뀌면 UGOS가 알아서 고쳐 줘요.
+   - No-IP 등 UGOS가 지원하는 다른 서비스여도 돼요.
+
+### 3. 공유기 포트 포워딩
+
+| 바깥 포트 | NAS 내부 IP의 포트 | 쓰임 |
+|---|---|---|
+| 443 | 8443 | https 접속 |
+| 80 | 8080 | 인증서 발급 · 갱신, http → https |
+
+- 5173(도토리숲), 8181(프록시 관리 화면), 9999 · 9443(UGOS 관리 화면)은 **열지 않아요**.
+
+### 4. HTTPS 연결 (Nginx Proxy Manager)
+
+1. 같은 와이파이에서 `http://<NAS 내부 IP>:8181`을 열어요. 처음 들어가면 관리자 이메일 · 비밀번호를 새로 정하라고 나와요.
+2. **Hosts → Proxy Hosts → Add Proxy Host**
+   - Domain Names: `dotori-home.duckdns.org`
+   - Scheme `http`, Forward Hostname `dotori`, Forward Port `5173`
+   - **Block Common Exploits** 켜기
+3. **SSL** 탭: **Request a new SSL Certificate** → **Force SSL** · **HTTP/2 Support** 켜기 → 이메일 넣고 약관 동의 → Save
+   - 인증서는 Let's Encrypt에서 받고, 만료 전에 저절로 갱신돼요(3번의 80 → 8080 포워딩이 필요해요).
+4. 휴대폰 데이터로 `https://dotori-home.duckdns.org`를 열어 로그인 화면이 나오면 끝이에요. 앱(APK)에는 이 주소를 넣어요.
+
+Nginx Proxy Manager는 `X-Forwarded-Proto` · `X-Forwarded-For`를 붙여 주므로, 서버가 https 접속으로 알아보고 로그인 쿠키를 보호해요.
+
+### 업데이트 · 백업
+
+- 서버는 시놀로지와 똑같이 5분마다 GitHub를 확인해서 저절로 업데이트해요.
+- 기록은 프로젝트 저장 위치의 `data/`, 인증서는 `proxy/`에 있어요. 두 폴더를 백업해 주세요.
 
 ## 3. 안드로이드 앱 (APK)
 
