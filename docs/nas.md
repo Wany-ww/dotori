@@ -8,20 +8,26 @@
 
 - 서버는 앱이 쓰는 파일(`index.html` · `js/` · `css/` · `assets/`)과 API만 내보내요. 계정 · 학습 기록이 든 `data/`, 문서, 도구, `.git`은 밖에서 열 수 없어요.
 - 그림 · 음성(약 160MB)은 기기에 7일 동안 저장해 두고, 코드는 바뀌었을 때만 다시 받아요. 처음 한 번만 오래 걸려요.
+- **자동 업데이트**: GitHub `main`에 커밋이 푸시되면
+  - 서버: NAS의 컨테이너가 5분마다 새 커밋을 확인해서 저절로 받아요(아래 1 참고).
+  - 앱 화면(놀이 · 커리큘럼): 서버에서 늘 새로 받아서 바로 바뀌어요.
+  - 앱 자체(`android/`가 바뀐 경우): GitHub Actions가 서명한 APK를 Releases에 올리고, 앱이 켜질 때 새 버전을 받을지 물어요(아래 3 참고).
 
 ## 1. NAS에 서버 올리기 (Docker)
 
 시놀로지(DSM 7.2 이상, Container Manager)를 기준으로 적었어요. QNAP은 Container Station에서 같은 `docker-compose.yml`로 "애플리케이션 만들기"를 하면 돼요.
 
 1. 패키지 센터에서 **Container Manager**를 설치해요.
-2. File Station에서 `docker/dotori` 폴더를 만들고, 이 저장소를 통째로 올려요.
-   - Git Server 패키지나 SSH가 있으면 `git clone https://github.com/Wany-ww/dotori.git`으로 받아도 돼요.
-   - `asset-src/`, `data/`는 올리지 않아도 돼요. `data/`는 처음 실행할 때 생겨요.
+2. File Station에서 `docker/dotori` 폴더를 만들고, 저장소에서 아래 3개만 올려요(통째로 올려도 돼요).
+   - `Dockerfile`, `docker-compose.yml`, `tools/runner.js`(`tools` 폴더째로)
+   - 앱 파일은 컨테이너가 처음 켜질 때 GitHub에서 직접 받아요(1~2분). 그래서 NAS가 인터넷에 연결돼 있어야 해요.
+   - `data/`는 처음 실행할 때 생겨요.
 3. Container Manager → **프로젝트** → **생성**
    - 경로: `docker/dotori`
    - 소스: "기존 docker-compose.yml 사용"
    - 이름: `dotori`
 4. 다 만들어지면 같은 와이파이의 컴퓨터에서 `http://<NAS 내부 IP>:5173`을 열어 봐요. 로그인 화면이 나오면 성공이에요.
+   - 처음에는 저장소를 받느라 1~2분 걸려요. 컨테이너 **로그**에 `서버 시작 (커밋 …)`이 나오면 준비된 거예요.
 
 ### 관리자 계정 만들기
 
@@ -37,9 +43,28 @@ SSH로 접속했다면:
 sudo docker exec -it dotori node tools/make-admin.js <아이디> <비밀번호> 관리자
 ```
 
-### 업데이트
+### 자동 업데이트
 
-새 버전을 받으면 `docker/dotori` 폴더의 파일을 바꾸고, 프로젝트에서 **작업 → 빌드**(또는 `docker compose up -d --build`)를 해요. `data/`는 그대로 남아요.
+컨테이너 안의 실행기(`tools/runner.js`)가 하는 일이에요.
+
+- 5분마다 GitHub `main` 브랜치에 새 커밋이 있는지 확인해요.
+- 새 커밋이 있으면 그 커밋으로 파일을 바꿔요.
+  - 화면 파일(`js` · `css` · `assets`)만 바뀌었으면 서버를 끄지 않고 바로 새 파일을 내보내요.
+  - 서버 코드(`server.js` · `tools/` · `package.json`)가 바뀌었으면 서버를 몇 초 동안 다시 켜요.
+- 서버가 멈추면 3초 뒤 다시 켜요.
+- `data/`(아이 · 보호자 기록)는 건드리지 않아요.
+- 컨테이너 **로그**에 `업데이트: 4a14fd9 → 220015d`처럼 남아요.
+
+`docker-compose.yml`의 환경 변수로 바꿀 수 있어요.
+
+| 변수 | 기본값 | 뜻 |
+|---|---|---|
+| `UPDATE_MINUTES` | `5` | 새 커밋 확인 간격(분) |
+| `AUTO_UPDATE` | `1` | `0`이면 자동 업데이트를 꺼요(컨테이너를 다시 만들 때만 새로 받아요) |
+| `BRANCH` | `main` | 따라갈 브랜치 |
+| `REPO_URL` | 이 저장소 | 받을 저장소 주소 |
+
+실행기(`tools/runner.js`)나 `Dockerfile`이 바뀐 경우에만 프로젝트에서 **작업 → 빌드**(또는 `docker compose up -d --build`)를 한 번 해 주세요. 저장소가 비공개로 바뀌면 받을 수 없으니 공개로 두어야 해요.
 
 ### 백업
 
@@ -67,15 +92,33 @@ sudo docker exec -it dotori node tools/make-admin.js <아이디> <비밀번호> 
 
 ## 3. 안드로이드 앱 (APK)
 
+### 처음 한 번: 서명 키 넣기
+
+앱을 자동으로 업데이트하려면 모든 APK를 같은 키로 서명해야 해요. 키는 만들어 두었어요(`android/release.keystore`, 저장소에는 올리지 않아요).
+
+1. `android/signing.local.txt`를 열어요(이 컴퓨터에만 있어요).
+2. GitHub 저장소 → **Settings → Secrets and variables → Actions → New repository secret**에서 파일에 적힌 4개(`ANDROID_KEY_ALIAS` · `ANDROID_KEYSTORE_PASSWORD` · `ANDROID_KEY_PASSWORD` · `ANDROID_KEYSTORE_BASE64`)를 이름과 값 그대로 넣어요.
+3. GitHub **Actions → Android APK → Run workflow**를 한 번 눌러요. 끝나면 **Releases**에 `도토리숲 앱 1.<번호>`가 생겨요.
+4. `release.keystore`와 `signing.local.txt`는 잃어버리면 같은 앱으로 업데이트할 수 없어요. USB나 비밀번호 관리 앱 등 저장소 밖에 따로 보관해 주세요.
+
+Secrets가 없으면 Actions는 디버그 APK만 만들어 실행 결과(Artifacts)에 올리고, Releases에는 올리지 않아요.
+
 ### 설치
 
-- APK 파일: GitHub 저장소의 **Actions → Android APK → 가장 최근 실행 → Artifacts**에서 `dotori-debug-apk`를 내려받아 압축을 풀어요. `android/`가 바뀌어 `main`에 올라가면 저절로 빌드돼요(직접 돌리려면 Actions에서 "Run workflow").
-  - 직접 빌드했다면 `android/app/build/outputs/apk/debug/app-debug.apk`에 생겨요.
-- 휴대폰으로 옮겨 열고, "출처를 알 수 없는 앱 설치"를 허용하면 설치돼요.
+- GitHub 저장소의 **Releases**에서 가장 최근 `도토리숲 앱 1.<번호>`의 `dotori-1.<번호>.apk`를 휴대폰으로 받아 열어요. "출처를 알 수 없는 앱 설치"를 허용하면 설치돼요.
+  - 전에 Actions Artifacts의 디버그 APK를 설치했다면 서명이 달라서 위에 덮어 설치할 수 없어요. 그 앱을 한 번 지우고 설치해요.
 - 처음 켜면 **서버 주소**를 물어요. `https://dotori-home.synology.me`처럼 2번에서 만든 주소를 적어요.
   - 집 와이파이 안에서만 쓸 때는 `http://192.168.0.10:5173`처럼 NAS 내부 주소도 돼요.
   - 앱이 `/api/ping`으로 도토리숲 서버인지 확인한 뒤 저장해요. 다음부터는 바로 열려요.
 - 주소를 바꾸려면 앱의 **프로필 → 앱 설정 → 서버 주소 바꾸기**를 눌러요. 서버에 연결하지 못하면 다시 시도하거나 주소를 고치는 화면이 나와요.
+
+### 앱 자동 업데이트
+
+1. `android/`가 바뀐 커밋이 `main`에 푸시되면 GitHub Actions가 버전 번호를 하나 올려 서명한 APK를 만들고, Releases에 `app-<번호>`로 올려요.
+2. 설치된 앱은 켜질 때(6시간에 한 번) 최신 릴리스를 확인해요. 지금보다 새 버전이면 "새 버전이 있어요"라고 물어요.
+3. **업데이트**를 누르면 APK를 받고 안드로이드 설치 화면을 열어요. 처음 한 번은 "이 출처의 앱 설치 허용"을 켜 달라고 해요.
+
+놀이 화면이나 커리큘럼만 바뀐 커밋은 앱을 다시 설치할 필요가 없어요. 서버가 업데이트되면 앱 화면도 바로 바뀌어요.
 
 ### 앱이 하는 일
 
@@ -99,5 +142,5 @@ cd android
 
 ### 알아 둘 것
 
-- 지금 APK는 **디버그 서명**이에요. 직접 설치해서 쓰기에는 문제가 없지만, Play 스토어에 올리려면 릴리스 서명 키를 만들어 `assembleRelease`로 빌드해야 해요. 서명 키는 저장소에 올리지 않아요.
+- 직접 빌드한 디버그 앱은 새 버전을 묻지 않아요. 서명된 릴리스는 `signing.local.txt`의 값을 환경 변수(`ANDROID_KEYSTORE_PASSWORD` · `ANDROID_KEY_PASSWORD` · `ANDROID_KEY_ALIAS`)로 넣고 `./gradlew assembleRelease`로 만들어요.
 - 앱 이름은 "도토리숲", 패키지는 `kr.dotori.forest`예요.

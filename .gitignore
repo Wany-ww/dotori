@@ -13,4 +13,5 @@ android/app/build/
 android/local.properties
 android/*.keystore
 android/*.jks
+android/signing.local.txt
 dist/

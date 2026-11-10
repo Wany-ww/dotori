@@ -1,11 +1,3 @@
-.git
-.claude
-data
-asset-src
-android
-docs
-design.md
-tools/voice
-tools/images
-tools/test
-node_modules
+# 이미지에는 실행기만 들어가요 (앱은 컨테이너가 GitHub에서 받아요)
+*
+!tools/runner.js

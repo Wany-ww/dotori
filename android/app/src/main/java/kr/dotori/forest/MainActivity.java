@@ -2,6 +2,14 @@ package kr.dotori.forest;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.Environment;
+import android.widget.Toast;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -37,12 +45,15 @@ import java.util.Locale;
  * - 처음 켜면 서버 주소를 묻고(assets/setup.html), /api/ping으로 도토리숲 서버인지 확인한 뒤 저장한다.
  * - 웹뷰에 없는 음성인식 · 음성 합성은 안드로이드 기능으로 대신하고, 웹 쪽(js/nativeBridge.js)에 DotoriNative로 넘겨준다.
  * - 서버 밖의 주소는 웹뷰에서 열지 않고 브라우저로 넘긴다.
+ * - 앱 자체의 새 버전은 GitHub Releases(app-<번호>)에서 확인해서, 받으면 설치 화면을 연다. 놀이 화면은 서버가 늘 새로 준다.
  */
 public class MainActivity extends Activity {
     private static final String PREFS = "dotori";
     private static final String KEY_SERVER = "server";
     private static final String SETUP = "file:///android_asset/setup.html";
     private static final int ASK_MIC = 1;
+    private static final String APK = "application/vnd.android.package-archive";
+    private static final long UPDATE_EVERY = 6 * 3600 * 1000L;
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private WebView web;
@@ -87,6 +98,7 @@ public class MainActivity extends Activity {
         if (!hasMic()) requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO }, ASK_MIC);
         if (saved != null) web.restoreState(saved);
         else open();
+        checkUpdate();
     }
 
     private SharedPreferences prefs() { return getSharedPreferences(PREFS, MODE_PRIVATE); }
@@ -284,6 +296,91 @@ public class MainActivity extends Activity {
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, partial);
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
         recognizer.startListening(intent);
+    }
+
+    /* ---------- 앱 업데이트 ---------- */
+    // 6시간에 한 번: 최신 릴리스(app-<번호>)가 지금 앱보다 새것이면 받을지 묻는다 (직접 빌드한 디버그 앱은 묻지 않음)
+    private void checkUpdate() {
+        if (BuildConfig.DEBUG) return;
+        if (System.currentTimeMillis() - prefs().getLong("updateCheckedAt", 0) < UPDATE_EVERY) return;
+        new Thread(() -> {
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL("https://api.github.com/repos/" + BuildConfig.UPDATE_REPO + "/releases/latest").openConnection();
+                c.setRequestProperty("Accept", "application/vnd.github+json");
+                c.setRequestProperty("User-Agent", "DotoriApp");
+                c.setConnectTimeout(8000);
+                c.setReadTimeout(8000);
+                if (c.getResponseCode() != 200) return;
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                java.io.InputStream in = c.getInputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                in.close();
+                c.disconnect();
+                JSONObject release = new JSONObject(out.toString("UTF-8"));
+                prefs().edit().putLong("updateCheckedAt", System.currentTimeMillis()).apply();
+                String tag = release.optString("tag_name");
+                if (!tag.startsWith("app-")) return;
+                int code = Integer.parseInt(tag.substring(4));
+                JSONArray assets = release.optJSONArray("assets");
+                String url = null;
+                for (int i = 0; assets != null && i < assets.length(); i++) {
+                    JSONObject a = assets.getJSONObject(i);
+                    if (a.optString("name").endsWith(".apk")) url = a.optString("browser_download_url");
+                }
+                if (code > BuildConfig.VERSION_CODE && url != null) {
+                    final String apkUrl = url;
+                    main.post(() -> askUpdate(code, apkUrl));
+                }
+            } catch (Exception ignored) {
+            }
+        }).start();
+    }
+
+    private void askUpdate(int code, String url) {
+        if (isFinishing()) return;
+        new AlertDialog.Builder(this)
+            .setTitle("새 버전이 있어요")
+            .setMessage("도토리숲 앱 1." + code + " 버전을 받아서 설치할까요?\n(놀이 화면은 서버에서 늘 새로 받아요. 이 업데이트는 앱 자체를 고쳐요.)")
+            .setPositiveButton("업데이트", (d, w) -> download(code, url))
+            .setNegativeButton("나중에", null)
+            .show();
+    }
+
+    // 내려받기가 끝나면 안드로이드 설치 화면을 연다 (처음 한 번은 "이 출처의 앱 설치 허용"을 물어요)
+    private void download(int code, String url) {
+        DownloadManager dm = getSystemService(DownloadManager.class);
+        if (dm == null) return;
+        String name = "dotori-" + code + ".apk";
+        java.io.File old = new java.io.File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), name);
+        if (old.exists()) old.delete();
+        DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url))
+            .setTitle("도토리숲 1." + code)
+            .setMimeType(APK)
+            .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, name)
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        long id = dm.enqueue(req);
+        Toast.makeText(this, "새 버전을 받고 있어요…", Toast.LENGTH_SHORT).show();
+        BroadcastReceiver done = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context ctx, Intent intent) {
+                if (intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) != id) return;
+                unregisterReceiver(this);
+                Uri apk = dm.getUriForDownloadedFile(id);
+                if (apk == null) {
+                    Toast.makeText(MainActivity.this, "새 버전을 받지 못했어요. 나중에 다시 해 볼게요.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Intent install = new Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(apk, APK)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try { startActivity(install); } catch (Exception ignored) {}
+            }
+        };
+        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(done, filter, Context.RECEIVER_EXPORTED);
+        else registerReceiver(done, filter);
     }
 
     @Override

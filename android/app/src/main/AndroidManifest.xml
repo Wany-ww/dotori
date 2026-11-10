@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 말하기 놀이: 아이 목소리를 듣고 알아듣기 (녹음은 저장하지 않아요) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 앱 새 버전(GitHub Releases)을 받아서 설치 화면을 열 때 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- 안드로이드 11부터: 음성인식 · TTS 앱을 찾을 수 있게 -->
     <queries>

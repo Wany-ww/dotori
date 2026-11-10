@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
+// CI(GitHub Actions)가 실행 번호를 버전으로 넘겨준다 (-PversionCode=…). 직접 빌드하면 1
+def appVersion = (project.findProperty('versionCode') ?: '1') as int
+// 서명 키: CI에서는 저장소 Secrets로 만든 파일(ANDROID_KEYSTORE_FILE), 직접 빌드할 때는 android/release.keystore
+def keystoreFile = System.getenv('ANDROID_KEYSTORE_FILE') ?: rootProject.file('release.keystore').path
+
 android {
     namespace 'kr.dotori.forest'
     compileSdk 34
@@ -10,13 +15,29 @@ android {
         applicationId 'kr.dotori.forest'
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode appVersion
+        versionName "1.${appVersion}"
+        // 앱이 새 버전을 확인하는 GitHub 저장소 (Releases)
+        buildConfigField 'String', 'UPDATE_REPO', '"Wany-ww/dotori"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreFile)
+            storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            keyAlias System.getenv('ANDROID_KEY_ALIAS') ?: 'dotori'
+            keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
         }
     }
 

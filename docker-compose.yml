@@ -1,4 +1,5 @@
 # NAS에서: 이 폴더에서 `docker compose up -d --build` (시놀로지는 Container Manager의 "프로젝트"로 이 파일을 열어요)
+# 컨테이너가 GitHub 저장소를 받아 서버를 돌리고, UPDATE_MINUTES분마다 새 커밋을 확인해서 저절로 업데이트해요.
 services:
   dotori:
     build: .
@@ -8,6 +9,11 @@ services:
       - "5173:5173"
     environment:
       - TZ=Asia/Seoul
+      - REPO_URL=https://github.com/Wany-ww/dotori.git
+      - BRANCH=main
+      # 새 커밋 확인 간격(분). AUTO_UPDATE=0 이면 자동 업데이트를 꺼요
+      - UPDATE_MINUTES=5
+      - AUTO_UPDATE=1
     volumes:
       # 아이 · 보호자 기록이 쌓이는 곳 (NAS의 이 폴더를 백업해 주세요)
       - ./data:/app/data
