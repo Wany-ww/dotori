@@ -1,0 +1,298 @@
+/* ==================== 영어: 알파벳 퍼즐 · 그림 조각 맞추기 · 몬스터 색칠공부 · 강아지 파닉스 · 플래시 카드 ==================== */
+
+/* 알파벳 퍼즐: 숲 바닥 위의 나무 알파벳 판 */
+.player[data-scene="forestfloor"] {
+  background-color: #6A4A32;
+  background-image: radial-gradient(ellipse 60% 40% at 50% 55%, #84603F, transparent 70%), linear-gradient(160deg, #775337, #5A3D29);
+}
+.player[data-scene="forestfloor"]::before { content: "🌿"; left: 2%; top: 120px; font-size: 64px; transform: rotate(-30deg); }
+.player[data-scene="forestfloor"]::after { content: "🍃"; right: 3%; bottom: 5%; font-size: 58px; }
+.abc-puzzle { display: flex; align-items: center; justify-content: center; gap: 26px; width: 100%; }
+.ab-board {
+  --cs: clamp(34px, 7.2vw, 60px);
+  display: flex; flex-direction: column; gap: 2px; padding: 16px 18px 18px;
+  background: repeating-linear-gradient(8deg, rgba(150, 90, 40, .07) 0 3px, transparent 3px 19px), linear-gradient(160deg, #F4CF9C, #DEAA6C);
+  border-radius: 24px; box-shadow: 0 8px 0 #A06A3A, 0 18px 30px rgba(30, 15, 5, .4);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+  animation: abBoard .5s var(--spring) both;
+}
+@keyframes abBoard { from { opacity: 0; transform: scale(.92); } }
+.ab-board.out { opacity: 0; transform: scale(.93); }
+.ab-row { display: flex; justify-content: center; }
+.ab-cell {
+  position: relative; width: var(--cs); height: calc(var(--cs) * 1.08); padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-latin); font-weight: 700; font-size: calc(var(--cs) * .84); line-height: 1; color: var(--tint);
+}
+.ab-cell span {
+  display: inline-block; -webkit-text-stroke: calc(var(--cs) * .09) #fff; paint-order: stroke fill;
+  filter: drop-shadow(0 3px 0 rgba(120, 70, 30, .35));
+}
+.ab-cell.hole { cursor: default; }
+.ab-cell.hole span { color: #B98252; -webkit-text-stroke: 0; filter: none; text-shadow: 0 -2px 0 rgba(90, 50, 20, .45), 0 2px 0 rgba(255, 240, 210, .6); }
+.ab-cell.hole.blank span { visibility: hidden; }
+.ab-cell.hole.blank::after {
+  content: ""; position: absolute; inset: 16% 14%; border-radius: 40%;
+  background: rgba(120, 70, 30, .2); box-shadow: inset 0 3px 4px rgba(90, 50, 20, .35);
+}
+.ab-cell.hole::before { content: ""; position: absolute; inset: 6%; border-radius: 30%; animation: abHole 1.8s ease-in-out infinite; }
+@keyframes abHole { 50% { background: rgba(255, 230, 150, .4); } }
+.ab-board.wave .ab-cell span { animation: abWave .5s var(--spring) both; animation-delay: calc(var(--i) * 45ms); }
+@keyframes abWave { 50% { transform: translateY(-14px) rotate(-8deg) scale(1.15); } }
+.ab-tray { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 96px; }
+.ab-piece {
+  position: relative; padding: 2px 10px; border: 0; background: none; cursor: grab; touch-action: none;
+  font-family: var(--font-latin); font-weight: 700; font-size: 68px; line-height: 1; color: var(--tint);
+  -webkit-text-stroke: 8px #fff; paint-order: stroke fill; filter: drop-shadow(0 6px 0 rgba(40, 20, 5, .4));
+  animation: abIn .5s var(--spring) both, abBob 2.6s ease-in-out 1s infinite;
+  transition: scale .2s var(--spring), filter .2s;
+}
+@keyframes abIn { from { opacity: 0; transform: translateX(60px) rotate(25deg) scale(.4); } }
+@keyframes abBob { 50% { transform: translateY(-6px) rotate(-4deg); } }
+.ab-piece.sel { scale: 1.16; filter: drop-shadow(0 0 10px #FFE68A) drop-shadow(0 6px 0 rgba(40, 20, 5, .4)); }
+.ab-piece.dragging { z-index: 50; scale: 1.18; cursor: grabbing; animation: none; filter: drop-shadow(0 16px 10px rgba(0, 0, 0, .35)); }
+
+/* 그림 조각 맞추기: 하늘색 연못가 */
+.player[data-scene="pond"] {
+  background-color: #6DBDE8;
+  background-image: radial-gradient(ellipse 30% 14% at 18% 22%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(ellipse 26% 12% at 82% 14%, rgba(255, 255, 255, .45), transparent 70%), linear-gradient(#94D3F2, #5FB2E2);
+}
+.player[data-scene="pond"]::before { content: "🌷"; left: 3%; bottom: 4%; font-size: 52px; }
+.player[data-scene="pond"]::after { content: "🐞"; right: 5%; top: 140px; font-size: 40px; transform: rotate(20deg); }
+.easy-puzzle { --s: min(250px, 48vw, 34vh); display: flex; flex-direction: column; align-items: center; width: 100%; }
+.ep-card {
+  position: relative; padding: 16px 38px; background: #FFFDF7; border-radius: 28px;
+  box-shadow: 0 8px 0 #3E86BD, 0 18px 30px rgba(20, 60, 100, .25); transition: box-shadow .4s;
+}
+.ep-card.done { box-shadow: 0 8px 0 #3E86BD, 0 0 0 7px #FFE68A, 0 0 40px 16px rgba(255, 230, 140, .9); }
+.ep-frame { position: relative; width: var(--s); height: var(--s); }
+.ep-shadow, .ep-piece, .ep-cut { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--s) * .8); line-height: 1; }
+.ep-shadow { filter: brightness(0); opacity: .2; pointer-events: none; }
+.ep-ghost { position: absolute; inset: 0; pointer-events: none; transition: background .3s; }
+.ep-ghost.hint { background: rgba(255, 205, 70, .55); }
+/* 바깥 칸은 잘리지 않은 채로 흰 테두리·그림자를 그리고, 안쪽 ep-cut만 퍼즐 모양으로 자른다. 누르는 곳은 잘린 모양뿐 */
+.ep-piece {
+  z-index: 2; pointer-events: none;
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 6px 5px rgba(20, 60, 100, .35));
+  transition: translate .45s var(--spring), filter .3s;
+  animation: epIn .5s var(--spring) both;
+}
+.ep-cut { pointer-events: auto; cursor: grab; touch-action: none; }
+.ep-piece.lift { z-index: 6; transition: filter .3s; }
+.ep-piece.lift .ep-cut { cursor: grabbing; }
+.ep-piece.placed { z-index: 1; filter: none; }
+.ep-piece.placed .ep-cut { cursor: default; }
+@keyframes epIn { from { opacity: 0; scale: .5; } }
+.ep-card.done .ep-frame { animation: epDone .6s var(--spring); }
+@keyframes epDone { 40% { transform: scale(1.1) rotate(-3deg); } }
+.ep-card.react .ep-frame { animation: epReact 1.4s ease-in-out; }
+@keyframes epReact { 15% { transform: translateY(-16px) rotate(-8deg); } 30% { transform: rotate(8deg); } 45% { transform: translateY(-10px) rotate(-5deg); } 60% { transform: none; } }
+.ep-zone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; min-height: calc(var(--s) * var(--zh, 1.1)); padding-top: 18px; }
+.ep-word {
+  font-family: var(--font-latin); font-weight: 700; font-size: 52px; line-height: 1; color: #fff;
+  text-shadow: 0 4px 0 rgba(30, 80, 130, .45); opacity: 0; transform: translateY(14px) scale(.7);
+  transition: opacity .35s, transform .45s var(--spring);
+}
+.ep-word.show { opacity: 1; transform: none; }
+.ep-choice { font-size: 30px; }
+
+/* 몬스터 색칠공부: 책상 위 스케치북과 크레파스 */
+.player[data-scene="craft"] {
+  background-color: #D9A774;
+  background-image: repeating-linear-gradient(0deg, transparent 0 116px, rgba(130, 70, 30, .16) 116px 120px), linear-gradient(135deg, #E9BD8D, #CF9763);
+}
+.player[data-scene="craft"]::before { content: "✏️"; left: 2%; top: 140px; font-size: 54px; transform: rotate(30deg); }
+.player[data-scene="craft"]::after { content: "✂️"; right: 3%; bottom: 6%; font-size: 56px; transform: rotate(-20deg); }
+.coloring { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+.cm-book { position: relative; width: min(660px, 100%); padding: 12px 12px 12px 34px; background: #8A5634; border-radius: 20px; box-shadow: 0 8px 0 #613A20, 0 16px 26px rgba(60, 30, 10, .3); }
+.cm-book::before {
+  content: ""; position: absolute; left: 9px; top: 18px; bottom: 18px; width: 20px;
+  background: repeating-linear-gradient(transparent 0 4px, #D9D9DF 4px 10px, #9D9DA8 10px 12px, transparent 12px 20px);
+}
+.cm-paper {
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px;
+  background: linear-gradient(#EAF6FD 0 74%, #BFE2A2 74% 77%, #A8D68A 77%); border-radius: 10px;
+}
+.cm-monster { width: auto; max-width: 58%; height: min(330px, 42vh); overflow: visible; }
+.cm-monster.choosing .cm-part { cursor: pointer; }
+.cm-monster :is(path, ellipse, circle, rect) { fill: #fff; stroke: #3B2A22; stroke-width: 4; stroke-linejoin: round; }
+.cm-monster .cm-ink circle { fill: #2B1F1A; stroke: none; }
+.cm-monster .cm-shine circle { fill: #fff; stroke: none; }
+.cm-part > * { transition: fill .7s ease; }
+.cm-monster .cm-part.painted > * { fill: var(--paint); }
+.cm-part.glow { filter: drop-shadow(0 0 5px #FFC93A) drop-shadow(0 0 12px #FFE68A); }
+.cm-monster .cm-part.glow > * { animation: cmGlow 1s ease-in-out infinite; }
+@keyframes cmGlow { 50% { fill: #FFF2B3; stroke: #E8A400; } }
+.cm-part.painted-now { transform-box: fill-box; transform-origin: center; animation: cmPaint .55s var(--spring); }
+@keyframes cmPaint { 40% { transform: scale(1.14) rotate(-3deg); } }
+.cm-monster.dance { transform-origin: 50% 95%; animation: cmDance .55s ease-in-out 4; }
+@keyframes cmDance { 25% { transform: rotate(-7deg) translateY(-8px); } 75% { transform: rotate(7deg) translateY(-8px); } }
+.cm-bubble {
+  position: relative; min-width: 128px; max-width: 210px; padding: 18px; cursor: pointer;
+  background: #fff; border: 4px solid #3B2A22; border-radius: 30px;
+  font-family: var(--font-latin); font-weight: 700; font-size: 28px; line-height: 1.15; color: var(--ink);
+}
+.cm-bubble:empty { visibility: hidden; }
+.cm-bubble::before { content: ""; position: absolute; left: -16px; top: 50%; margin-top: -10px; border: 10px solid transparent; border-right: 14px solid #3B2A22; border-left: 0; }
+.cm-bubble.done { border-color: #E2689F; }
+.cm-bubble.done::before { border-right-color: #E2689F; }
+.cm-palette {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 16px;
+  min-height: 100px; padding: 12px 22px 10px; background: #6B4226; border-radius: 18px; box-shadow: inset 0 5px 0 rgba(0, 0, 0, .22);
+}
+.crayon {
+  position: relative; display: flex; flex-direction: column; align-items: center; width: 42px; height: 84px; padding: 0;
+  border: 0; background: none; cursor: pointer; transition: transform .25s var(--spring); animation: crayonIn .45s var(--spring) both;
+}
+@keyframes crayonIn { from { opacity: 0; transform: translateY(40px); } }
+.crayon-tip { width: 24px; height: 22px; background: var(--c); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.crayon-body {
+  flex: 1; width: 38px; border-radius: 6px 6px 9px 9px;
+  background: linear-gradient(transparent 26%, rgba(255, 255, 255, .5) 26% 32%, transparent 32% 66%, rgba(255, 255, 255, .5) 66% 72%, transparent 72%),
+    linear-gradient(90deg, rgba(255, 255, 255, .3), transparent 40%, rgba(0, 0, 0, .15)), var(--c);
+}
+.crayon:hover { transform: translateY(-6px); }
+.crayon.sel { transform: translateY(-20px) rotate(-10deg); filter: drop-shadow(0 0 8px #FFE68A); }
+
+/* 강아지 파닉스: 밤 마당의 두 강아지와 뼈다귀 */
+.player[data-scene="yard"] {
+  background-color: #1C2A5C;
+  background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent), radial-gradient(1.5px 1.5px at 76% 12%, #fff, transparent), radial-gradient(2px 2px at 88% 30%, #FFF5C8, transparent), radial-gradient(1.5px 1.5px at 30% 8%, #fff, transparent), linear-gradient(#1A2557, #2A3C7C);
+}
+.dogphonics { display: flex; flex-direction: column; width: min(780px, 100%); }
+.dg-yard {
+  position: relative; display: flex; justify-content: space-around; align-items: flex-end; gap: 10px;
+  min-height: 250px; padding: 70px 8% 18px; border-radius: 24px 24px 0 0;
+  background: radial-gradient(ellipse 50% 70% at 50% 0%, rgba(140, 190, 255, .45), transparent 70%), linear-gradient(#24499A, #2F63B8);
+}
+.dg-yard::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 22px; height: 76px;
+  background: linear-gradient(transparent 22%, #3F6DB8 22% 32%, transparent 32% 64%, #3F6DB8 64% 74%, transparent 74%),
+    repeating-linear-gradient(90deg, #4B7CC6 0 16px, transparent 16px 30px);
+}
+.dg-yard::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: repeating-linear-gradient(90deg, #4F80C9 0 60px, #4A78BE 60px 62px); }
+.dog { --fur: #FBF1E3; --ear: #C98B4F; position: relative; z-index: 1; width: min(200px, 38%); padding: 0; border: 0; background: none; cursor: pointer; }
+.dog-1 { --fur: #F2A443; --ear: #B9651E; }
+.dg-svg { display: block; width: 100%; height: auto; overflow: visible; transition: filter .5s; }
+.dog-1 .dg-svg { scale: -1 1; }
+.dog.dim .dg-svg { filter: brightness(.3) saturate(.25); }
+.dog.over .dg-svg { filter: drop-shadow(0 0 10px #FFE68A) drop-shadow(0 0 4px #FFE68A); }
+.dg-svg :is(ellipse, circle, rect, path) { stroke: #3A2618; stroke-width: 2.5; }
+.dg-svg .dg-fur { fill: var(--fur); }
+.dg-svg .dg-ear { fill: var(--ear); }
+.dg-svg .dg-dark { fill: #2A1C14; stroke: none; }
+.dg-svg .dg-collar { fill: #E2414F; }
+.dg-svg .dg-tail { fill: none; stroke: var(--fur); stroke-width: 9; stroke-linecap: round; transform-box: view-box; transform-origin: 34px 104px; }
+.dog.happy .dg-tail { animation: dgWag .2s ease-in-out infinite alternate; }
+@keyframes dgWag { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+.dog.barking .dg-svg, .dog.happy:not(.eat) .dg-svg { animation: dgBark .35s ease-in-out 2; transform-origin: 50% 100%; }
+@keyframes dgBark { 50% { transform: translateY(-10px) scale(1.04); } }
+.dog.eat .dg-svg { animation: dgEat .9s ease-in-out; transform-origin: 30% 100%; }
+@keyframes dgEat { 20%, 60% { transform: rotate(7deg) translateY(6px); } 40%, 80% { transform: rotate(3deg); } }
+.dog.no .dg-svg { animation: dgNo .5s ease-in-out; transform-origin: 50% 100%; }
+@keyframes dgNo { 20%, 60% { transform: rotate(-5deg); } 40%, 80% { transform: rotate(5deg); } }
+.dg-bubble {
+  position: absolute; z-index: 3; left: 50%; top: 0; padding: 6px 16px; white-space: nowrap;
+  background: #fff; color: #D7335A; border-radius: 18px; box-shadow: 0 4px 0 rgba(0, 0, 0, .2);
+  font-family: var(--font-latin); font-weight: 700; font-size: 26px; letter-spacing: 2px;
+  opacity: 0; transform: translate(-50%, -100%) scale(.5); transition: opacity .25s, transform .35s var(--spring);
+}
+.dg-bubble.show { opacity: 1; transform: translate(-50%, -100%); }
+.dg-bowl { position: absolute; bottom: 0; right: -18%; width: 36%; height: 15px; background: linear-gradient(#EA4A60, #B72A42); border-radius: 6px 6px 16px 16px; box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.dog-1 .dg-bowl { right: auto; left: -18%; }
+.dg-ground {
+  display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 24px 40px; min-height: 210px; padding: 26px 28px;
+  background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, .05) 0 10px, transparent 11px), radial-gradient(circle at 75% 70%, rgba(255, 255, 255, .05) 0 8px, transparent 9px), #4E3B34;
+  border-radius: 0 0 24px 24px; box-shadow: 0 10px 24px rgba(0, 0, 0, .3);
+}
+.bone {
+  position: relative; width: 128px; height: 48px; padding: 0; border: 0; border-radius: 12px; background: #FFFCF4; cursor: grab; touch-action: none;
+  font-family: var(--font-latin); font-weight: 700; font-size: 28px; color: #2B2B2B;
+  box-shadow: 0 5px 0 rgba(0, 0, 0, .28); animation: boneUp .5s var(--spring) both;
+  transition: translate .5s var(--ease), scale .5s var(--ease), opacity .3s;
+}
+.bone::before, .bone::after {
+  content: ""; position: absolute; top: -9px; width: 30px; height: 66px; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at 50% 24%, #FFFCF4 0 14px, transparent 15px), radial-gradient(circle at 50% 76%, #FFFCF4 0 14px, transparent 15px);
+}
+.bone::before { left: -15px; }
+.bone::after { right: -15px; }
+.bone b { color: #E0335B; }
+@keyframes boneUp { from { opacity: 0; transform: translateY(40px) rotate(-14deg); } }
+.bone.sel { scale: 1.1; box-shadow: 0 0 0 4px #FFE68A, 0 5px 0 rgba(0, 0, 0, .28); }
+.bone.dragging { z-index: 40; scale: 1.08; transition: none; animation: none; cursor: grabbing; }
+.bone.fed { z-index: 30; scale: .45; pointer-events: none; }
+
+/* 플래시 카드: 책상 너머 토리 앞발 */
+.enflash { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(820px, 100%); min-height: 430px; }
+.efc-paws { position: relative; width: 100%; height: 30px; }
+.efc-paw, .efc-arm { position: absolute; background-color: #C67B3C; }
+.efc-paw {
+  top: -34px; width: 78px; height: 48px; border-radius: 40px 40px 28px 28px; box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .12);
+  background-image: radial-gradient(circle at 24% 70%, #FCE3C8 0 7px, transparent 8px), radial-gradient(circle at 50% 78%, #FCE3C8 0 7px, transparent 8px), radial-gradient(circle at 76% 70%, #FCE3C8 0 7px, transparent 8px);
+  animation: efcPaw 3s ease-in-out infinite;
+}
+.efc-paw.left { left: 18%; }
+.efc-paw.right { right: 18%; animation-delay: -1.5s; }
+@keyframes efcPaw { 50% { transform: translateY(4px); } }
+.efc-arm {
+  left: 50%; top: -30px; z-index: 20; width: 86px; height: 0; translate: -50% 0; border-radius: 0 0 44px 44px;
+  background-image: radial-gradient(circle at 30% calc(100% - 16px), #FCE3C8 0 8px, transparent 9px), radial-gradient(circle at 70% calc(100% - 16px), #FCE3C8 0 8px, transparent 9px);
+}
+.efc-paws.sweep .efc-arm { animation: efcSweep 1.1s var(--ease); }
+@keyframes efcSweep { 45% { height: 330px; } 100% { height: 0; } }
+.efc-topic { padding: 6px 18px; background: #fff; color: #8A5A2B; border-radius: var(--r-pill); font-family: var(--font-latin); font-weight: 700; font-size: 20px; box-shadow: 0 4px 0 rgba(110, 60, 25, .25); }
+.efc-desk { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; width: 100%; min-height: 300px; transition: transform .5s var(--ease), opacity .45s; }
+.efc-desk.quiz { flex-direction: column; gap: 22px; }
+.efc-desk.swept { transform: translateY(-140px) scale(.8); opacity: 0; }
+.efc-slot, .efc-pickcard { position: relative; padding: 0; border: 0; background: none; cursor: pointer; }
+.efc-slot.deal, .efc-wordcard.deal { animation: efcDeal .55s var(--spring) both; }
+@keyframes efcDeal { from { opacity: 0; transform: translateY(-170px) rotate(-14deg) scale(.6); } }
+.efc-card {
+  display: flex; flex-direction: column; width: 116px; height: 150px; overflow: hidden; background: #fff; border-radius: 16px;
+  box-shadow: 0 6px 0 rgba(110, 60, 25, .35), 0 12px 18px rgba(80, 40, 10, .2); transition: transform .25s var(--spring);
+}
+.efc-pic { flex: 1; display: grid; place-items: center; font-size: 62px; line-height: 1; }
+.efc-label { padding: 6px 4px 8px; background: #8FD3F2; color: #17324A; text-align: center; font-weight: 700; font-size: 22px; }
+.efc-card:not(:has(.efc-pic)) .efc-label { flex: 1; display: grid; place-items: center; font-size: 30px; }
+.efc-slot.say .efc-card { animation: efcSay .7s var(--spring); }
+@keyframes efcSay { 40% { transform: translateY(-14px) scale(1.08); box-shadow: 0 0 0 5px #FFE68A, 0 14px 22px rgba(80, 40, 10, .3); } }
+.efc-pickcard:hover .efc-card { transform: translateY(-6px); }
+.efc-pickcard.chosen, .efc-bubble.chosen { z-index: 2; animation: efcChosen .6s var(--spring) forwards; }
+.efc-pickcard.chosen .efc-card, .efc-bubble.chosen { box-shadow: 0 0 0 6px #FFE68A, 0 0 34px 12px rgba(255, 226, 130, .9); }
+@keyframes efcChosen { to { transform: translateY(-18px) scale(1.16); } }
+.efc-desk.solved :is(.efc-pickcard, .efc-bubble):not(.chosen) { opacity: .25; transform: scale(.9); transition: .4s; }
+.efc-speaker {
+  position: relative; width: 98px; height: 72px; padding: 0; border: 0; border-radius: 22px; cursor: pointer;
+  background: #6C7BEA; color: #fff; font-size: 38px; box-shadow: 0 6px 0 #4652B8; animation: efcDeal .5s var(--spring) both;
+}
+.efc-speaker::after { content: ""; position: absolute; left: 50%; top: -12px; margin-left: -9px; border: 9px solid transparent; border-top: 0; border-bottom: 13px solid #6C7BEA; }
+.efc-speaker.talk { animation: efcTalk 1.2s ease; }
+@keyframes efcTalk { 10%, 80% { background: #F7C844; box-shadow: 0 6px 0 #D29C14, 0 0 26px 10px rgba(255, 220, 100, .8); transform: scale(1.08); } }
+.efc-wordcard { padding: 22px 44px; background: #8FD3F2; color: #17324A; border-radius: 18px; font-family: var(--font-latin); font-weight: 700; font-size: 42px; box-shadow: 0 6px 0 rgba(30, 80, 110, .35); }
+.efc-bubble { position: relative; width: 112px; height: 100px; padding: 0; border: 0; border-radius: 32px; background: #fff; cursor: pointer; box-shadow: 0 6px 0 rgba(110, 60, 25, .3); transition: transform .25s var(--spring); }
+.efc-bubble::after { content: ""; position: absolute; left: 50%; bottom: -12px; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top: 13px solid #fff; }
+.efc-bubble .efc-pic { height: 100%; font-size: 56px; }
+.efc-bubble:hover { transform: translateY(-6px); }
+
+@media (max-width: 700px) {
+  .abc-puzzle { flex-direction: column; gap: 14px; }
+  .ab-tray { flex-direction: row; flex-wrap: wrap; justify-content: center; min-height: 80px; }
+  .ab-piece { font-size: 56px; }
+  .cm-paper { flex-direction: column-reverse; min-height: 0; }
+  .cm-monster { max-width: 80%; height: min(280px, 38vh); }
+  .cm-bubble { font-size: 24px; }
+  .cm-bubble::before { left: 50%; top: auto; bottom: -16px; margin: 0 0 0 -10px; border: 10px solid transparent; border-top: 14px solid #3B2A22; border-bottom: 0; }
+  .cm-bubble.done::before { border-top-color: #E2689F; border-right-color: transparent; }
+  .crayon { width: 34px; height: 72px; }
+  .crayon-body { width: 30px; }
+  .dg-yard { min-height: 200px; padding: 60px 4% 16px; }
+  .dog { width: 44%; }
+  .dg-bubble { font-size: 22px; padding: 4px 12px; }
+  .bone { width: 104px; height: 44px; font-size: 24px; }
+  .efc-card { width: 92px; height: 124px; }
+  .efc-pic { font-size: 48px; }
+  .efc-label { font-size: 18px; }
+  .efc-bubble { width: 92px; height: 86px; }
+  .efc-bubble .efc-pic { font-size: 46px; }
+  .efc-wordcard { font-size: 34px; padding: 18px 32px; }
+}

@@ -1,0 +1,8 @@
+# 아이 · 보호자 개인정보(계정, 학습 기록, 작품)는 저장소에 올리지 않는다
+data/
+# 이미지 원본(생성한 그대로, 큰 파일). 앱은 다듬은 assets/만 쓴다
+asset-src/
+node_modules/
+.claude/settings.local.json
+__pycache__/
+*.log

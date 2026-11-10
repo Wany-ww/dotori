@@ -1,0 +1,103 @@
+/* 도토리숲 디자인 토큰 — 유아용: 진한 파스텔(캔디) 팔레트, 큰 터치 영역, 둥근 모서리, 눌리는 입체 버튼 */
+:root {
+  /* 바탕 */
+  --cream: #FFF5FA;
+  --paper: #FFFFFF;
+  --sand: #FFE8DA;
+  --sand-deep: #F7C9AE;
+  --line: #F1DDF0;
+  --line-deep: #DCC0E4;
+
+  /* 글자: 아주 진한 보라빛 남색 */
+  --ink: #33264D;
+  --ink-soft: #66587E;
+  --ink-faint: #A497B8;
+
+  /* 브랜드: 도토리 & 나뭇잎 */
+  --acorn: #E0873F;
+  --acorn-deep: #A2561E;
+  --acorn-soft: #FFE5CC;
+  --leaf: #3CC98F;
+  --leaf-deep: #1E9E69;
+  --leaf-soft: #D8F6E8;
+
+  /* 과목 색: 딸기 핑크 / 하늘 파랑 / 라벤더 */
+  --hangul: #FF7A9C;
+  --hangul-deep: #E04F77;
+  --hangul-soft: #FFE1EA;
+  --math: #4AAEFF;
+  --math-deep: #1F85E0;
+  --math-soft: #DAEEFF;
+  --english: #A57BFF;
+  --english-deep: #7A50E8;
+  --english-soft: #EEE5FF;
+
+  /* 보조 파스텔 */
+  --mint: #4FD8B0;
+  --mint-deep: #1EAA82;
+  --peach: #FF9F73;
+  --peach-deep: #E5703E;
+  --sky: #7CCBFF;
+  --lilac: #C8A8FF;
+
+  /* 피드백 */
+  --success: #2DBF7F;
+  --success-deep: #17955D;
+  --success-soft: #D6F6E6;
+  --sun: #FFCB3D;
+  --sun-deep: #E9A300;
+  --sun-soft: #FFF1C4;
+
+  /* 모양 */
+  --r-sm: 14px;
+  --r-md: 22px;
+  --r-lg: 32px;
+  --r-pill: 999px;
+  --tap: 64px;
+  --press: 6px;
+  --shadow-card: 0 10px 30px rgba(122, 64, 140, .12);
+
+  /* 글꼴: Jua(둥근 제목), Gowun Dodum(본문), Andika(유아 읽기용 라틴 글꼴) */
+  --font-display: 'Jua', 'Gowun Dodum', system-ui, sans-serif;
+  --font-body: 'Gowun Dodum', 'Jua', system-ui, sans-serif;
+  --font-latin: 'Andika', 'Jua', system-ui, sans-serif;
+
+  /* 움직임 */
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease: cubic-bezier(.22, 1, .36, 1);
+
+  /* 과목 테마 기본값 */
+  --sub: var(--acorn);
+  --sub-deep: var(--acorn-deep);
+  --sub-soft: var(--acorn-soft);
+
+  /* 게임 장면 일러스트 (원본은 asset-src/, tools/images/prepare_assets.py로 줄여서 넣는다) */
+  --art-beach: url(../assets/scenes/beach.webp);
+  --art-chalk: url(../assets/scenes/chalk-room.webp);
+  --art-night: url(../assets/scenes/night.webp);
+  --art-wood: url(../assets/scenes/desk.webp);
+  --art-notebook: url(../assets/scenes/notebook.webp);
+  --art-stage: url(../assets/scenes/stage.webp);
+  --art-workshop: url(../assets/scenes/workshop.webp);
+  --art-field: url(../assets/scenes/field.webp);
+  --art-mine: url(../assets/scenes/mine.webp);
+  --art-space: url(../assets/scenes/space.webp);
+  --art-table: url(../assets/scenes/table.webp);
+  --art-factory: url(../assets/scenes/factory.webp);
+  --art-meadow: url(../assets/scenes/meadow.webp);
+  --art-bath: url(../assets/scenes/bath.webp);
+  --art-book: url(../assets/scenes/book-desk.webp);
+  --art-neon: url(../assets/scenes/neon.webp);
+  --art-kitchen: url(../assets/scenes/kitchen.webp);
+  --art-city: url(../assets/scenes/city.webp);
+  --art-witch: url(../assets/scenes/witch.webp);
+  --art-grove: url(../assets/scenes/grove.webp);
+  --art-study: url(../assets/scenes/study.webp);
+  --map-hangul: url(../assets/maps/hangul.webp);
+  --map-math: url(../assets/maps/math.webp);
+  --map-english: url(../assets/maps/english.webp);
+}
+
+[data-subject="hangul"] { --sub: var(--hangul); --sub-deep: var(--hangul-deep); --sub-soft: var(--hangul-soft); }
+[data-subject="math"] { --sub: var(--math); --sub-deep: var(--math-deep); --sub-soft: var(--math-soft); }
+[data-subject="english"] { --sub: var(--english); --sub-deep: var(--english-deep); --sub-soft: var(--english-soft); }

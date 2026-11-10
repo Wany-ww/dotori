@@ -1,0 +1,130 @@
+/* ---------- 수학 놀이 (보기 고르기 · 조작 교구 · 사고력) ---------- */
+
+/* 보기 고르기 공용 */
+.math-quiz { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+.mq-visual { display: grid; place-items: center; min-height: 150px; width: min(640px, 100%); padding: 14px; border-radius: 22px; background: #fff; box-shadow: var(--shadow-card); transition: transform .3s var(--spring); }
+.mq-visual.solved { transform: scale(1.03); }
+.mq-ask { margin: 0; font-family: var(--font-display); font-size: 22px; text-align: center; }
+.mq-opt { min-width: 84px; font-size: 26px; }
+.mq-opt.pic { padding: 6px; }
+.mq-opt.pic svg { width: 96px; height: 96px; }
+.mq-opt.ball { border-radius: 50%; width: 84px; height: 84px; background: radial-gradient(circle at 35% 30%, #fff, #DDE3EA); }
+.mq-opt.ball.shoot { animation: mqShoot .8s var(--ease) forwards; }
+@keyframes mqShoot { to { transform: translate(120px, -160px) scale(.5); opacity: 0; } }
+.mq-big { font-family: var(--font-latin); font-weight: 700; font-size: 44px; color: #2B2B2B; }
+.mq-eq { margin: 8px 0 0; text-align: center; font: 700 30px var(--font-latin); }
+.mq-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 200px; }
+.mq-dots i { width: 22px; height: 22px; border-radius: 50%; background: #F2B630; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .15); }
+.mq-domino { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 16px; background: #2B2B2B; }
+.mq-domino .pip { display: grid; grid-template-columns: repeat(3, 18px); gap: 6px; width: 78px; min-height: 78px; padding: 6px; border-radius: 10px; background: #fff; align-content: center; justify-content: center; }
+.mq-domino .pip i { width: 18px; height: 18px; background: #2B2B2B; box-shadow: none; }
+.mq-domino .pip.hide { display: grid; place-items: center; font: 700 40px var(--font-latin); color: #9AA3AD; }
+.mq-bar { width: 4px; height: 70px; background: #fff; border-radius: 2px; }
+.mq-pitch { display: flex; align-items: center; gap: 20px; }
+.mq-goal { font-size: 64px; }
+.mq-story { margin: 0; max-width: 520px; font-family: var(--font-display); font-size: 24px; line-height: 1.5; text-align: center; }
+.mq-object { position: absolute; bottom: 52px; height: 30px; border-radius: 14px; background: #F28C28; display: grid; place-items: center end; font-size: 24px; padding-right: 4px; }
+.mq-object.two { bottom: 92px; background: #4A90E2; }
+.mq-units { position: absolute; left: 0; bottom: 48px; display: flex; height: 6px; }
+.mq-units i { flex: 1; border: 1px solid #fff; background: #5DBB63; }
+.mq-scale { position: relative; width: 300px; height: 160px; }
+.mq-beam { position: absolute; left: 20px; right: 20px; top: 50px; height: 8px; border-radius: 4px; background: #8A5A3C; transition: transform .6s var(--spring); }
+.mq-scale.tilt .mq-beam { transform: rotate(-8deg); }
+.mq-scale .pan { position: absolute; top: 14px; min-width: 96px; padding: 6px 10px; border-radius: 10px; background: #FFF3D6; box-shadow: 0 4px 0 #C9A060; text-align: center; font: 700 24px var(--font-latin); transition: transform .6s var(--spring); }
+.mq-scale .pan.l { left: 0; }
+.mq-scale .pan.r { right: 0; }
+.mq-scale.tilt .pan.l { transform: translateY(18px); }
+.mq-scale.tilt .pan.r { transform: translateY(-18px); }
+.mq-stand { position: absolute; left: 50%; top: 54px; translate: -50% 0; width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 90px solid #6B4428; }
+
+/* 배고픈 애벌레 · 로켓 카운트다운 */
+
+/* 수직선 */
+
+/* 100판 · 자릿값 격자 */
+.hundred, .place-grid { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.hb-board { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; width: min(560px, 100%); }
+.hb-cell { height: 38px; padding: 0; border: 0; border-radius: 6px; background: #F2F5F9; font: 700 15px var(--font-latin); cursor: pointer; }
+.hb-cell.hole { background: #FFE9A8; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .15); }
+.hb-cell.placed { background: #E8F8D8; color: #2F8F3A; }
+.hb-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hb-tile { width: 52px; height: 44px; border: 0; border-radius: 8px; background: #4A90E2; color: #fff; font: 700 18px var(--font-latin); cursor: pointer; box-shadow: 0 3px 0 #2E6CB0; }
+.hb-tile.sel { box-shadow: 0 0 0 4px #FFD84A; }
+.hg-ask, .hg-sum { margin: 0; font-family: var(--font-display); font-size: 20px; }
+.hg-grid { display: flex; flex-direction: column; gap: 3px; }
+.hg-row { display: flex; gap: 3px; }
+.hg-ten { width: 38px; height: 26px; padding: 0; border: 0; border-radius: 6px; background: #4A90E2; color: #fff; font: 700 13px var(--font-latin); cursor: pointer; }
+.hg-cell { width: 26px; height: 26px; padding: 0; border: 1px solid #C9D3E0; border-radius: 4px; background: #fff; cursor: pointer; }
+.hg-cell.on { background: #F2B630; border-color: #D9A022; }
+
+/* 세로셈 */
+.stacked { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.st-sheet { display: flex; flex-direction: column; gap: 4px; padding: 16px 24px; border-radius: 16px; background: repeating-linear-gradient(90deg, #fff 0 54px, #EEF4FB 54px 56px); box-shadow: var(--shadow-card); }
+.st-row { display: flex; gap: 6px; }
+.st-cell { display: grid; place-items: center; width: 50px; height: 54px; border-radius: 8px; font: 700 36px var(--font-latin); color: #2B2B2B; }
+.st-cell.carry { height: 30px; font-size: 20px; color: #E8484F; }
+.st-cell.op { color: #4A90E2; }
+.st-cell.ans { background: #F7F4EC; border: 2px dashed #C9B48C; }
+.st-cell.ans.done { background: #E8F8D8; border: 2px solid #7BC043; }
+.st-cell.focus { box-shadow: 0 0 0 4px #FFD84A; background: #FFF8D6; }
+.st-cell.top { cursor: pointer; position: relative; }
+.st-cell.top s { color: #9AA3AD; font-size: 26px; }
+.st-cell.top small { font-size: 18px; color: #E8484F; position: absolute; top: -14px; }
+.st-cell.top small.ten { position: static; font-size: 13px; }
+.st-line { height: 4px; border-radius: 2px; background: #2B2B2B; }
+.st-tip { margin: 0; min-height: 26px; font-family: var(--font-display); font-size: 20px; }
+.st-pad { display: grid; grid-template-columns: repeat(5, 56px); gap: 8px; }
+.st-key { height: 52px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .12); font: 700 26px var(--font-latin); cursor: pointer; }
+
+/* 탈리 마크 */
+
+/* 분수 */
+.fr-frac { display: inline-flex; flex-direction: column; align-items: center; font: 700 26px/1.1 var(--font-latin); color: #E8484F; }
+.fr-frac i { width: 26px; height: 3px; background: currentColor; }
+
+/* 수식 완성하기 · 숫자 조합기 */
+.equation { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+.eq-ask { margin: 0; font-family: var(--font-display); font-size: 21px; text-align: center; }
+.eq-row { display: flex; align-items: center; gap: 10px; }
+.eq-fixed { font: 700 40px var(--font-latin); }
+.eq-slot { width: 66px; height: 70px; border: 3px dashed #C9B48C; border-radius: 12px; background: #FFFBEF; font: 700 36px var(--font-latin); cursor: pointer; }
+.eq-slot.op { width: 54px; border-radius: 50%; }
+.eq-bank { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 520px; }
+.eq-tile { width: 54px; height: 54px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .12); font: 700 26px var(--font-latin); cursor: pointer; }
+.eq-tile.op { background: #FFD84A; border-radius: 50%; }
+.eq-tile[disabled] { opacity: .3; }
+
+/* 데칼코마니 */
+.symmetry { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.sy-palette { display: flex; gap: 10px; }
+.sy-color { width: 44px; height: 44px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 2px 0 rgba(0, 0, 0, .15); cursor: pointer; font-size: 22px; background: #fff; }
+.sy-color.on { box-shadow: 0 0 0 4px #2B2B2B; }
+.sy-board { display: grid; gap: 3px; width: min(440px, 92vw); padding: 8px; border-radius: 14px; background: #fff; box-shadow: var(--shadow-card); transition: transform .6s; }
+.sy-board.fold { transform: rotateY(25deg); }
+.sy-cell { aspect-ratio: 1; padding: 0; border: 1px solid #E2E6EC; border-radius: 4px; background: #FAFBFD; cursor: pointer; }
+.sy-cell.given { cursor: default; }
+.sy-cell.axis { box-shadow: 3px 0 0 #E8484F; }
+
+/* 칠교 · 도형 조합 */
+.tangram { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.tg-title { margin: 0; font-family: var(--font-display); font-size: 22px; }
+.tg-board { width: min(340px, 86vw); height: auto; max-height: 340px; }
+.tg-slot { fill: rgba(60, 60, 80, .25); stroke: none; cursor: pointer; }
+.tg-slot.outline { stroke: #fff; stroke-width: 2; stroke-dasharray: 6 4; }
+.tg-slot.done { pointer-events: none; }
+.tg-placed { stroke: rgba(0, 0, 0, .25); stroke-width: 2; pointer-events: none; }
+.tg-tray { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; min-height: 80px; }
+.tg-piece { padding: 6px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .12); cursor: pointer; }
+.tg-piece.sel { box-shadow: 0 0 0 4px #FFD84A; }
+
+@media (max-width: 700px) {
+  .mq-visual { min-height: 120px; padding: 10px; }
+  .mq-big { font-size: 32px; }
+  .mq-scale { width: 260px; }
+  .hb-cell { height: 30px; font-size: 12px; }
+  .hg-cell { width: 22px; height: 22px; }
+  .hg-ten { width: 32px; height: 22px; }
+  .st-cell { width: 42px; height: 48px; font-size: 30px; }
+  .st-pad { grid-template-columns: repeat(5, 48px); }
+  .eq-slot { width: 54px; height: 60px; font-size: 30px; }
+}

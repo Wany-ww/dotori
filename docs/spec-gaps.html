@@ -1,0 +1,380 @@
+<title>도토리숲 명세 보완 목록</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 한 줄 읽기 칼럼(최대 940px). 위에 요약 표, 그 아래 고정 필터 막대, 분류별 목록은 [과목·번호 | 이름·질문] 두 칸 줄 */
+:root {
+  --bg: #FBF7FC; --surface: #FFFFFF; --ink: #2E2440; --muted: #6B6080; --line: #E9DFEF; --tint: #F5EEF8;
+  --accent: #C93F6C; --accent-soft: #FBE3EC;
+  --hangul: #D2416B; --hangul-soft: #FCE4EB; --math: #1C76CC; --math-soft: #E0EEFB; --english: #6E47DA; --english-soft: #ECE5FD;
+  --display: 'Jua', 'IBM Plex Sans KR', system-ui, sans-serif;
+  --body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17131D; --surface: #211B2A; --ink: #F1ECF6; --muted: #A99FBA; --line: #352C42; --tint: #2A2235;
+  --accent: #FF86AA; --accent-soft: #3B2131;
+  --hangul: #FF8FAE; --hangul-soft: #3A2030; --math: #78BEFF; --math-soft: #182B40; --english: #B89CFF; --english-soft: #2A2245;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #17131D; --surface: #211B2A; --ink: #F1ECF6; --muted: #A99FBA; --line: #352C42; --tint: #2A2235;
+  --accent: #FF86AA; --accent-soft: #3B2131;
+  --hangul: #FF8FAE; --hangul-soft: #3A2030; --math: #78BEFF; --math-soft: #182B40; --english: #B89CFF; --english-soft: #2A2245;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 940px; margin: 0 auto; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 36px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+code { font-family: var(--mono); font-size: .86em; padding: 1px 6px; border-radius: 6px; background: var(--tint); color: var(--muted); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.top { display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-size: 13px; letter-spacing: .04em; color: var(--muted); }
+h1 { font-size: clamp(34px, 6vw, 48px); line-height: 1.1; }
+.lead { max-width: 62ch; font-size: 17px; color: var(--muted); }
+.lead b { color: var(--ink); font-weight: 600; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.stat { display: flex; align-items: baseline; gap: 8px; color: var(--muted); }
+.stat b { font-family: var(--display); font-weight: 400; font-size: 30px; color: var(--ink); line-height: 1; }
+.stat.need b { color: var(--accent); }
+
+.matrix-wrap { overflow-x: auto; }
+.matrix { width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.matrix th, .matrix td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+.matrix thead th { font-size: 13px; font-weight: 500; color: var(--muted); background: var(--tint); }
+.matrix th[scope="row"] { text-align: left; font-weight: 500; }
+.matrix tfoot th, .matrix tfoot td { border-bottom: 0; font-weight: 600; }
+.matrix .sum { font-weight: 600; }
+.rowbtn { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.rowbtn:hover { color: var(--accent); }
+.cell { min-width: 40px; padding: 2px 10px; border: 0; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; cursor: pointer; }
+.cell:hover { background: var(--accent); color: var(--surface); }
+.cell.zero { background: none; color: var(--muted); font-weight: 400; opacity: .55; cursor: default; }
+.gid { display: inline-grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: 13px; }
+
+.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.search { flex: 1 1 200px; min-width: 0; }
+.search input { width: 100%; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.result { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.reset { border: 0; background: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 0; }
+
+.group { display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 80px; }
+.group-head { display: flex; flex-direction: column; gap: 8px; }
+.group h2 { display: flex; align-items: center; gap: 10px; font-size: 24px; }
+.gcount { font-family: var(--body); font-size: 14px; color: var(--muted); }
+.note { max-width: 70ch; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.note ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.note b { color: var(--ink); font-weight: 600; }
+.items { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.item { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.meta { display: flex; align-items: flex-start; gap: 8px; font-variant-numeric: tabular-nums; }
+.sub { padding: 1px 8px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.sub-k { color: var(--hangul); background: var(--hangul-soft); }
+.sub-m { color: var(--math); background: var(--math-soft); }
+.sub-e { color: var(--english); background: var(--english-soft); }
+.no { font-family: var(--mono); font-size: 13px; color: var(--muted); padding-top: 1px; }
+.body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.name { font-weight: 600; overflow-wrap: anywhere; }
+.noname { color: var(--accent); font-weight: 500; }
+.q { color: var(--ink); overflow-wrap: anywhere; }
+.empty { padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; }
+
+.extra { display: flex; flex-direction: column; gap: 14px; }
+.extra h2 { font-size: 24px; }
+.table-wrap { overflow-x: auto; }
+.plain { width: 100%; min-width: 560px; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.plain th, .plain td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.plain thead th { font-size: 13px; font-weight: 500; color: var(--muted); background: var(--tint); }
+.plain tr:last-child td { border-bottom: 0; }
+.plain td:first-child { font-weight: 600; white-space: nowrap; }
+.sub-h { font-size: 18px; margin-top: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; }
+.tag i { font-style: normal; font-family: var(--mono); color: var(--muted); margin-left: 4px; }
+.foot { font-size: 13px; color: var(--muted); }
+
+@media (max-width: 560px) {
+  .item { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .matrix th, .matrix td { padding: 7px 6px; }
+  .rowbtn { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">도토리숲 · design.md 미니게임 표 검토 · 2026년 11월 10일 (22차)</p>
+    <h1>명세 보완 목록</h1>
+    <p class="lead">아직 만들지 않은 미니게임 <b>6종</b>은 모두 지금 명세만으로는 만들 수 없거나 해석이 갈려요. 줄마다 적힌 <b>정해야 할 것</b>에 답을 주시면 바로 만들 수 있어요.</p>
+    <div class="stats">
+      <span class="stat"><b>6</b>미구현</span>
+      <span class="stat need"><b>6</b>답변 필요</span>
+      <span class="stat"><b>17</b>정해짐</span>
+    </div>
+  </header>
+
+  <section aria-label="분류별 개수">
+    <div class="matrix-wrap">
+<table class="matrix">
+  <thead><tr><th scope="col">분류</th><th scope="col">한글</th><th scope="col">수학</th><th scope="col">영어</th><th scope="col">합계</th></tr></thead>
+  <tbody>
+    <tr>
+      <th scope="row"><button type="button" class="rowbtn" data-g="A"><span class="gid">A</span>이름이나 설명이 비어 있음</button></th>
+      <td><span class="cell zero">0</span></td><td><span class="cell zero">0</span></td><td><button type="button" class="cell" data-g="A" data-s="e" aria-label="A분류 영어 2종만 보기">2</button></td>
+      <td class="sum">2</td></tr><tr>
+      <th scope="row"><button type="button" class="rowbtn" data-g="B"><span class="gid">B</span>설명은 있지만 풀이 방식을 알 수 없음</button></th>
+      <td><button type="button" class="cell" data-g="B" data-s="k" aria-label="B분류 한글 1종만 보기">1</button></td><td><button type="button" class="cell" data-g="B" data-s="m" aria-label="B분류 수학 3종만 보기">3</button></td><td><span class="cell zero">0</span></td>
+      <td class="sum">4</td></tr>
+  </tbody>
+  <tfoot><tr><th scope="row">합계</th><td>1</td><td>3</td><td>2</td><td class="sum">6</td></tr></tfoot>
+</table></div>
+  </section>
+
+  <div class="filters" role="search">
+    <div class="seg" id="subjFilter" aria-label="과목">
+      <button type="button" data-s="" aria-pressed="true">전체</button>
+      <button type="button" data-s="k" aria-pressed="false">한글</button><button type="button" data-s="m" aria-pressed="false">수학</button><button type="button" data-s="e" aria-pressed="false">영어</button>
+    </div>
+    <div class="seg" id="groupFilter" aria-label="분류">
+      <button type="button" data-g="" aria-pressed="true">모든 분류</button>
+      <button type="button" data-g="A" aria-pressed="false" title="이름이나 설명이 비어 있음">A</button><button type="button" data-g="B" aria-pressed="false" title="설명은 있지만 풀이 방식을 알 수 없음">B</button>
+    </div>
+    <label class="search"><span hidden>검색</span><input id="q" type="search" placeholder="이름, 식별자, 내용으로 찾기" autocomplete="off"></label>
+    <span class="result" id="result" aria-live="polite">6종 표시</span>
+    <button type="button" class="reset" id="reset" hidden>필터 지우기</button>
+  </div>
+
+  <div id="list" style="display:flex;flex-direction:column;gap:36px">
+    
+<section class="group" id="A" data-g="A" aria-labelledby="h-A">
+  <header class="group-head">
+    <h2 id="h-A"><span class="gid">A</span>이름이나 설명이 비어 있음 <span class="gcount" data-count="A">2종</span></h2>
+    <div class="note"><p>표에 <code>All_App_GameTitle_…</code> / <code>All_App_GameDesc_…</code> 같은 번역 키만 남아 있어요. 무엇을 하는 놀이인지부터 정해야 해요.</p></div>
+  </header>
+  <ol class="items">
+    <li class="item" data-s="e" data-g="A" data-text="placementtest 배치 고사 설명 없음. 문항 수, 출제 범위, 결과로 시작 레벨(a~z)을 정하는 규칙(5.1 &quot;적응형 의사결정트리&quot;) 영어 27">
+      <div class="meta"><span class="sub sub-e">영어</span><span class="no">#27</span></div>
+      <div class="body">
+        <p class="name">배치 고사 <code>PlacementTest</code></p>
+        <p class="q">설명 없음. 문항 수, 출제 범위, 결과로 시작 레벨(A~Z)을 정하는 규칙(5.1 &quot;적응형 의사결정트리&quot;)</p>
+      </div>
+    </li><li class="item" data-s="e" data-g="A" data-text="speakingpractice ai 말하기 설명 없음. ai와 무엇을 주제로 말하는지, AI와 무엇을 주제로 말하는지 영어 63">
+      <div class="meta"><span class="sub sub-e">영어</span><span class="no">#63</span></div>
+      <div class="body">
+        <p class="name">AI 말하기 <code>SpeakingPractice</code></p>
+        <p class="q">설명 없음. AI와 무엇을 주제로 말하는지</p>
+      </div>
+    </li>
+  </ol>
+</section>
+<section class="group" id="B" data-g="B" aria-labelledby="h-B">
+  <header class="group-head">
+    <h2 id="h-B"><span class="gid">B</span>설명은 있지만 풀이 방식을 알 수 없음 <span class="gcount" data-count="B">4종</span></h2>
+    <div class="note"><p>분위기 문구만 있어서 아이가 무엇을 누르고/끌고, 무엇이 정답인지 정할 수 없어요. &quot;무엇을 보고(들고) → 무엇을 해서 → 언제 맞는지&quot;를 한 줄씩 정해 주세요.</p></div>
+  </header>
+  <ol class="items">
+    <li class="item" data-s="k" data-g="B" data-text="hangeultyper 한글입력기 &quot;한글입력기 입니다&quot;뿐이에요. 따로 노는 놀이인지, 다른 게임이 쓰는 입력 도구인지 한글 58">
+      <div class="meta"><span class="sub sub-k">한글</span><span class="no">#58</span></div>
+      <div class="body">
+        <p class="name">한글입력기 <code>HangeulTyper</code></p>
+        <p class="q">&quot;한글입력기 입니다&quot;뿐이에요. 따로 노는 놀이인지, 다른 게임이 쓰는 입력 도구인지</p>
+      </div>
+    </li><li class="item" data-s="m" data-g="B" data-text="mathanimalquiz 수학 애니멀 퀴즈 종합 퀴즈의 출제 범위와 문항 형식, 80단계를 어떻게 나누는지 수학 76">
+      <div class="meta"><span class="sub sub-m">수학</span><span class="no">#76</span></div>
+      <div class="body">
+        <p class="name">수학 애니멀 퀴즈 <code>MathAnimalQuiz</code></p>
+        <p class="q">종합 퀴즈의 출제 범위와 문항 형식, 80단계를 어떻게 나누는지</p>
+      </div>
+    </li><li class="item" data-s="m" data-g="B" data-text="mathanimaltest 수학 애니멀 테스트 단원별 평가 문항 수와 통과 기준 수학 77">
+      <div class="meta"><span class="sub sub-m">수학</span><span class="no">#77</span></div>
+      <div class="body">
+        <p class="name">수학 애니멀 테스트 <code>MathAnimalTest</code></p>
+        <p class="q">단원별 평가 문항 수와 통과 기준</p>
+      </div>
+    </li><li class="item" data-s="m" data-g="B" data-text="doubletake 양손 인지 반응 &quot;양손 인지 반응&quot;의 조작(좌우를 동시에 누르나?)과 비교 조건 예시 수학 79">
+      <div class="meta"><span class="sub sub-m">수학</span><span class="no">#79</span></div>
+      <div class="body">
+        <p class="name">양손 인지 반응 <code>DoubleTake</code></p>
+        <p class="q">&quot;양손 인지 반응&quot;의 조작(좌우를 동시에 누르나?)과 비교 조건 예시</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+    <p class="empty" id="empty" hidden>조건에 맞는 게임이 없어요. 필터를 지워 보세요.</p>
+  </div>
+
+  <section class="extra" aria-labelledby="h-done">
+    <h2 id="h-done">정해진 것</h2>
+    <p class="note">답을 받아 만들거나 정리한 놀이예요. 위 목록에서는 뺐어요.</p>
+    <div class="table-wrap"><table class="plain">
+      <thead><tr><th scope="col">과목 · 번호</th><th scope="col">정한 내용</th><th scope="col">우리 게임</th></tr></thead>
+      <tbody>
+        <tr><td>한글 #73<br>단원 찾기 퀴즈 <code>PlacementTest</code></td><td>일일 학습(오늘의 할 일)을 5번 할 때마다 보는 확인 퀴즈. 최근 5차시에서 10문제(소리 듣고 빈칸 낱말 · 그림 보고 낱말 · 그림 보고 문장 등 3지선다). 70% 미만이면 다음 날 가장 약한 차시와 그 난이도로 돌아가 복습해요. (11월 4일)</td><td><code>k-check</code></td></tr>
+        <tr><td>한글 #61<br>시계 기차 <code>TrainTime</code></td><td>수학 &quot;기차 시간표와 시계&quot;와 같은 놀이에서 시각을 한글로 읽는 데 초점. &quot;세 시 삼십 분&quot;처럼 한글로만 쓴 출발 시각을 읽고 바늘 맞추기와, 시계를 보고 알맞은 한글 시각 고르기(삼 시 · 서른 분 같은 함정)를 번갈아 해요. (11월 4일)</td><td><code>k-clock</code></td></tr>
+        <tr><td>영어 #44<br>단어 챌린지 <code>WordChallenge</code></td><td>참고 영상 기준. 제목판 뒤 5문제: 단어를 읽거나 소리만 듣고 그림 3개 중 고르기, 문제마다 한 번만 골라요(틀리면 ✕ 후 다음 문제). Level D는 날마다, A · B는 단계 마지막(4) 차시의 챌린지 칸. (11월 4일)</td><td><code>e-wchal</code></td></tr>
+        <tr><td>영어 #51<br>파닉스 챌린지 <code>PhonicsChallenge</code></td><td>참고 영상 기준. 그림 + 소리 + &quot;_ad&quot;에서 빠진 글자 고르기(짧은 모음 차시는 c_t). Level F는 날마다, C는 4차시. (11월 4일)</td><td><code>e-pchal</code></td></tr>
+        <tr><td>영어 #57<br>리스닝 챌린지 <code>ListeningChallenge</code></td><td>참고 영상 기준. &quot;Listen and choose the correct picture.&quot; 차시 문장을 듣고 그림 고르기. G ~ Z 단계 4차시. (11월 4일)</td><td><code>e-lchal</code></td></tr>
+        <tr><td>영어 #65<br>그래머 챌린지 <code>GrammarChallenge</code></td><td>참고 영상 기준. &quot;a cat&quot; · &quot;an apple&quot;을 읽고 들어 수 · 관사가 맞는 그림 고르기, 단계에 따라 three · big · small까지. G ~ Z 단계 4차시. (11월 4일)</td><td><code>e-gchal</code></td></tr>
+        <tr><td>영어 #69<br>낙하탑 낱말 맞히기 <code>TowerDrop</code></td><td>무벌점 원칙의 예외로 둠. 영어 챌린지처럼 도전할 수 있는 사탕 5개가 있고(탑 막대 5개), 틀릴 때마다 하나씩 쓰며 다 쓰면 게임 오버. (11월 4일)</td><td><code>e-tower</code></td></tr>
+        <tr><td>영어 #4<br>메신저 <code>CallwithFriends</code></td><td>참고 영상 기준. 걸려 온 영상 전화를 받으면 친구가 말을 걸고, 알맞은 대답 · 엉뚱한 대답 두 개를 들려준 뒤 알맞은 것을 마이크에 말해요. 엉뚱한 대답이면 다시 듣고 말해요. (11월 4일)</td><td><code>e-call</code></td></tr>
+        <tr><td>영어 #37<br>떨어지는 별 받기 <code>StarFall</code></td><td>난이도에 따라 알파벳이나 단어가 적힌 별이 떨어지고, 아래의 일치하는 알파벳(낮은 단계)이나 그림(높은 단계)을 골라 받아요. (11월 4일)</td><td><code>e-starfall</code></td></tr>
+        <tr><td>수학 #19 · #25 · #62<br>꽃밭 수 감각 · 아이스크림 스쿱 · 심해 탐험 수세기 <code>LearningReadiness…</code></td><td><b>같은 놀이라 합침.</b> #80 순서 기억하기 · #81 아이스크림 옮기기 · #82 바닷속 친구들의 쉬운 단계로 두고, 첫 탐색 묶음에서도 나와요. (11월 9일)</td><td><code>m-flowers · m-icecream · m-sea</code></td></tr>
+        <tr><td>수학 #86<br>데칼코마니 탄생 <code>DecalcomanieBirth</code></td><td><b>같은 놀이라 합침.</b> #85 데칼코마니에 합쳤어요. (11월 9일)</td><td><code>m-decal</code></td></tr>
+        <tr><td>수학 #33 · #34 · #36<br>거스름돈 계산 (국가별) <code>MoneyGameCN · JP · US</code></td><td><b>명세에서 뺌.</b> 다른 나라 화폐판은 두지 않고, 한국 돈(#35 동전의 분류와 합)만 둬요. (11월 9일)</td><td><code>m-change</code></td></tr>
+        <tr><td>수학 커리큘럼<br>Level A ~ H</td><td><b>상세 단계로 오늘의 할 일을 짬.</b> 8단계 36개 상세 단계(A-1 10까지 수 배우기 ~ H-6 입체도형의 구성 요소)를 단계마다 2 ~ 4일씩(모두 99일) 해요. 여러 날 하는 단계는 날마다 다른 놀이가 나와요. 상세 단계마다 목표에 맞는 놀이와 그 놀이의 난이도 · 수 범위를 정해 두어 같은 놀이도 단계마다 내용이 달라져요. 칸이 모자라면 앞 단계를 복습해요. 설명이 없던 G-4 시계 읽기는 &quot;몇 시 몇 분 읽기&quot;로 정했어요. (11월 9일, 여러 날로 바꿈 11월 10일)</td><td><code>수학 오늘의 할 일</code></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="extra" aria-labelledby="h-video">
+    <h2 id="h-video">참고 영상으로 바꾼 것 (11월 8일)</h2>
+    <p class="note">수학 참고 영상 116개(수 세기 10개, 수와 연산 8개, 연산 11개, 곱셈 · 세로셈 10개, 세로셈 · 나눗셈 7개, 수학적 사고 · 시계 · 돈 12개, 도형 · 측정 · 그래프 15개, 스터디 랩 · 도형/공간 18개, 사고력 세상 16개, 곱셈구구 마스터 · AI 연습문제 9개)를 보고 맞춘 놀이예요. 답을 기다리던 놀이 중 #4 숫자 열차 · #5 쿠키 · #14 블록 연산 · #65 몇 개일까요 · #1 빵집 연산(쿠키 만들기)은 영상으로 방식이 정해져서 만들고 위 목록에서 뺐어요. 명세에 없던 &quot;여러 자리 수 연산&quot;은 수학 #93, &quot;도형 그리기&quot;는 수학 #94, &quot;곱셈구구 마스터&quot;는 수학 #95, &quot;맞춤 연습문제&quot;(영상의 AI 연습문제)는 수학 #96으로 명세에 추가했어요. 답을 기다리던 #74 사물 관찰하기, #69 · #70 · #71 스터디 랩, #80 사고력 꽃밭(순서 기억하기) · #81 사고력 아이스크림(아이스크림 옮기기)도 영상으로 방식이 정해져서 만들었어요. 나머지는 명세에 있던 놀이예요. 그림은 도토리숲 그림체로 새로 그렸어요.</p>
+    <div class="table-wrap"><table class="plain">
+      <thead><tr><th scope="col">과목 · 번호</th><th scope="col">바꾼 내용</th><th scope="col">우리 게임</th></tr></thead>
+      <tbody>
+        <tr><td>수학 #6<br>수 세기 <code>Counting</code></td><td><b>다시 만듦.</b> 과일 · 채소를 하나씩 → 둘씩 → 다섯씩 → 열씩과 낱개로 눌러 세고, 숫자판을 누르거나 끌어 넣거나 칸에 손으로 써서 답해요.</td><td><code>m-count</code></td></tr>
+        <tr><td>수학 #7<br>수 세기 기초 <code>CountingMC</code></td><td><b>새로 만듦.</b> 물건을 하나씩 눌러 하나 · 둘로 세고, 점이 찍힌 숫자 카드 중 맞는 수를 골라요. 1~3 → 1~5 → 3~10 → 점 없는 카드 → 11~20.</td><td><code>m-basic</code></td></tr>
+        <tr><td>수학 #17<br>도미노 산수 <code>FindNMake</code></td><td><b>다시 만듦.</b> &quot;3을 찾으세요&quot;: 점이 N개인 주사위 면(1단계) · 도미노(2단계)를 찾아 빈 자리에 넣고, 3단계부터 덧셈으로 이어져요.</td><td><code>m-domino</code></td></tr>
+        <tr><td>수학 #57<br>탈리 <code>Tallies</code></td><td><b>다시 만듦.</b> 바를 정 자 대신, 눈 달린 블록(탈리)을 줄 위로 올리고 내리며 동그라미 속 수를 만들어요(모으기 · 가르기). 높은 단계는 5 · 10개 묶음.</td><td><code>m-tally</code></td></tr>
+        <tr><td>수학 #58<br>탈리 연구실 <code>TalliesLab</code></td><td><b>다시 만듦.</b> 플라스크 목에 적힌 수가 되도록 탈리 묶음을 넣어요. 넘치면 튕겨 나오고, 넣은 묶음은 눌러서 다시 꺼내요.</td><td><code>m-tallylab</code></td></tr>
+        <tr><td>수학 #59<br>탈리를 잡아라 <code>TallyCatch</code></td><td><b>다시 만듦.</b> &quot;탈리가 4에 숨어 있어요&quot;를 듣고 수직선에서 그 자리를 겨냥해 다람쥐 새총으로 도토리를 쏘아요. 0~5 → 10 → 20 → 100.</td><td><code>m-tallycatch</code></td></tr>
+        <tr><td>수학 #60<br>숫자 따라 쓰기 <code>Tracing</code></td><td><b>난이도 · 화면 맞춤.</b> 왼쪽에 수만큼 점, 오른쪽 공책 줄 판에서 따라 쓰기. 1~5 → 6~9 · 0 → 0~9 → 11~20 → 듣고 혼자 쓰기.</td><td><code>m-trace</code></td></tr>
+        <tr><td>수학 #41<br>숫자 퍼즐 <code>NumberPuzzle</code></td><td><b>난이도 맞춤.</b> 1단계부터 1~10 나무판에 차례대로 끼워요.</td><td><code>m-numpuz</code></td></tr>
+        <tr><td>수학 #23<br>백 칸 퀴즈 <code>HundredsBoard</code></td><td><b>난이도 맞춤.</b> 1~100 판 전체에서 눌러 찾기. &quot;5를 찾으세요&quot;(1~2단계) → 1 · 10 큰/작은 수.</td><td><code>m-hquiz</code></td></tr>
+        <tr><td>수학 #21<br>식사 시간 <code>FrogorHippo</code></td><td><b>난이도 맞춤.</b> 1단계부터 &gt; = &lt; 기호로 답하고, 맞히면 그림 밑에 수가 나오며 악어가 더 많은 쪽을 먹어요.</td><td><code>m-compare</code></td></tr>
+        <tr><td>수학 #4<br>숫자 열차 <code>CircusTrain</code></td><td><b>새로 만듦.</b> &quot;가장 큰 수 · 가장 작은 수&quot;를 찾아 열차 앞 · 뒤 칸에 싣기와, 수를 크기 차례대로 열차 칸에 늘어놓기를 번갈아 해요. 1~5 → 10까지 → 11~20 → 두 자리 → 47 · 74처럼 헷갈리는 수.</td><td><code>m-circus</code></td></tr>
+        <tr><td>수학 #32<br>빠진 숫자 찾기 <code>MissingNumber</code></td><td><b>새로 만듦</b>(전에는 패턴 기차의 한 판). 둥지의 알에 1 · 2 · 5 · 10씩 뛰어 세는 수가 있고, 빈 알에 들어갈 수를 숫자판으로 붙이면 병아리가 나와요. 4단계부터 거꾸로 세기.</td><td><code>m-missing</code></td></tr>
+        <tr><td>수학 #48<br>로켓 발사 <code>RocketLaunch</code></td><td><b>다시 만듦.</b> 카운트다운 대신, 연료 탱크에 10 묶음과 낱개 연료를 번개 수만큼 넣고 ✓를 눌러 발사해요. 넘치면 탱크 속 연료를 눌러 빼요.</td><td><code>m-rocket</code></td></tr>
+        <tr><td>수학 #38<br>자릿값 블록 <code>NumberBlocks</code></td><td><b>다시 만듦.</b> 십 막대 · 큐브 대신 자릿값 카드(90 · 4)를 상자에 겹쳐 놓아 위의 수(94)를 만들어요. 자리를 바꾼 카드(9 · 40)는 튕겨 나오고, 4단계부터 세 자리.</td><td><code>m-blocks</code></td></tr>
+        <tr><td>수학 #67<br>피자 조각 분수 <code>FractionPizza</code></td><td><b>다시 만듦.</b> 피자를 손가락으로 그어 똑같이 자르고(크기가 다르면 다시), 조각마다 1/4이 붙으면 쟁반에 분수만큼 담아요. 네모 피자와 같은 크기 분수까지.</td><td><code>m-pizza</code></td></tr>
+        <tr><td>수학 #66<br>음료수 분수 <code>FractionDrinks</code></td><td><b>다시 만듦.</b> 단추를 누르고 있는 동안 주스가 나오고, 손님 주문(5/7)만큼 채워 ✓를 눌러요. 높은 단계는 눈금 숫자 없이, 같은 크기 분수로.</td><td><code>m-drink</code></td></tr>
+        <tr><td>수학 #24<br>배고픈 애벌레 <code>HungryCaterpillar</code></td><td><b>다시 만듦.</b> 과일이 쿵 떨어져 뒤죽박죽이 된 애벌레 몸통을 끌거나 바꿔 수 차례대로 맞추면 과일을 먹어요. 1~3 → 2 · 5 · 10씩 → 띄엄띄엄 두 자리.</td><td><code>m-caterpillar</code></td></tr>
+        <tr><td>수학 #40<br>숫자 조합기 <code>NumberLineUp</code></td><td><b>난이도 맞춤.</b> 2단계는 카드 두 장으로 &quot;가장 큰 두 자리 수를 만드세요&quot;, 남는 카드는 3단계부터.</td><td><code>m-digits</code></td></tr>
+        <tr><td>수학 #5<br>쿠키 <code>Cookies</code></td><td><b>새로 만듦</b>(이름은 &quot;쿠키 나누기&quot;였지만 영상대로 덧셈). 고양이 발이 노란 쿠키와 초콜릿 쿠키를 놓으면 모두 몇 개인지 숫자판이나 손글씨로 답해요. 5단계는 쿠키를 가져가는 빼기.</td><td><code>m-cookies</code></td></tr>
+        <tr><td>수학 #14<br>블록 연산 <code>FallingBlocks</code></td><td><b>새로 만듦.</b> 세 줄(수 · 기호 · 수)로 쌓여 내려오는 블록의 맨 아래 식을 10칸 판으로 보고 답하면 블록이 떨어져요. 20까지 덧셈 · 뺄셈.</td><td><code>m-fallblocks</code></td></tr>
+        <tr><td>수학 #65<br>몇 개일까요 <code>WordWindows</code></td><td><b>새로 만듦.</b> 커튼 창문 두 개의 문장(&quot;가게에 아이스바 1개가 있어요.&quot;)을 읽고 &quot;모두 합하면 몇 개일까요?&quot;에 수 카드를 골라요. 맞히면 커튼이 열려요. 빼기 · 비교까지.</td><td><code>m-windows</code></td></tr>
+        <tr><td>수학 #13<br>수식 완성하기 <code>EquationMaker</code></td><td><b>다시 만듦.</b> 식에 쓰일 카드(1 · 6 · − · = · 5)만 섞어 주고, 다섯 칸에 늘어놓아 맞는 식을 만들어요.</td><td><code>m-equation</code></td></tr>
+        <tr><td>수학 #39<br>수직선 불 켜기 <code>NumberLine</code></td><td><b>다시 만듦</b>(수직선 밝히기). &quot;7 + ? = 10&quot;에 맞는 블록 줄을 골라 수직선의 7 뒤에 붙이고 ✓를 누르면 불이 켜져요.</td><td><code>m-light</code></td></tr>
+        <tr><td>수학 #18<br>어항 물고기 세기 <code>FishTank</code></td><td><b>다시 만듦</b>(수족관). 물고기를 어항 둘에 적힌 수만큼 나눠 담거나 그물로 건지고 &quot;4 = 1 + 3&quot;, &quot;6 − 1 = 5&quot; 식을 완성해요.</td><td><code>m-fish</code></td></tr>
+        <tr><td>수학 #28<br>과일 가게 덧셈 <code>MangoShop</code></td><td><b>다시 만듦.</b> 동전 대신, 10칸 상자의 과일을 옮겨 한 상자를 10으로 채워 받아올림 덧셈을 하고, 10 과일을 풀어 받아내림 뺄셈을 해요.</td><td><code>m-mango</code></td></tr>
+        <tr><td>수학 #43 · #46 · #44<br>빠른 덧셈 · 뺄셈 · 연산</td><td><b>다시 만듦.</b> 6줄 셈 판(1+2, 2+2, 3+2 …)을 위에서부터 숫자판 · 손글씨로 풀어요. 세 놀이로 나누고, 곱셈(<code>m-quickmul</code>)도 같은 판으로.</td><td><code>m-quick</code> · <code>m-quicksub</code> · <code>m-facts</code></td></tr>
+        <tr><td>수학 #93 (추가)<br>여러 자리 수 연산 <code>MultiDigitCalc</code></td><td><b>명세에 추가하고 새로 만듦.</b> 노란 연습장의 세로셈을 연필 · 지우개로 자유롭게 풀어 보고, 숫자판으로 답을 넣어 ✓를 눌러요. 한 자리 → 세 자리 덧셈 · 뺄셈.</td><td><code>m-multidigit</code></td></tr>
+        <tr><td>수학 #1<br>빵집 연산 <code>BakeryMath</code></td><td><b>새로 만듦</b>(쿠키 만들기). 주문 수(12)를 보고 반죽 기계의 다이얼(3 × ?)을 돌리면 쟁반에 반죽이 줄줄이 놓이고, 3 × 4 = 12가 되면 쿠키를 구워요.</td><td><code>m-bakery</code></td></tr>
+        <tr><td>수학 #64<br>문장제 수식 변환 <code>WordToEquation</code></td><td><b>다시 만듦</b>(읽고 수식 만들기). &quot;소녀가 2명 있었는데, 3명 더 왔습니다.&quot;를 읽고, 남는 카드가 섞인 카드로 2 + 3 = 5를 만들어요.</td><td><code>m-wordeq</code></td></tr>
+        <tr><td>수학 #20<br>개구리 수직선 점프 <code>FroggyHop</code></td><td><b>다시 만듦</b>(연못 건너기, 명세 분류가 곱셈). &quot;1 × 3 = ?&quot;의 답이 적힌 연잎으로 개구리를 뛰게 해 한 단을 건너가요.</td><td><code>m-frog</code></td></tr>
+        <tr><td>수학 #12<br>달걀 묶음 판매 <code>EggsForSale</code></td><td><b>다시 만듦</b>(달걀 판매). 손님이 말한 수만큼 달걀판의 왼쪽 위에서부터 네모나게 골라 &quot;4 × 2 = 8&quot;을 만들어요.</td><td><code>m-eggs</code></td></tr>
+        <tr><td>수학 #37<br>구구단 마스터 <code>MultiplicationTable</code></td><td><b>다시 만듦</b>(곱셈 퍼즐). 단 막대(0, 8, 16, … 80)를 0~10 곱셈표의 알맞은 세로줄에 끼워요.</td><td><code>m-gugu</code></td></tr>
+        <tr><td>수학 #3<br>곱셈 구슬 <code>BeadsPlay</code></td><td><b>다시 만듦</b>(구슬 꿰기). 실 끝을 끌어 1×1, 1×2 … 차례로 구슬을 꿰면 곱이 나타나요.</td><td><code>m-beads</code></td></tr>
+        <tr><td>수학 #2 · #30 · #45<br>양팔 저울 · 수학 축구 · 스피드 곱셈</td><td><b>난이도 맞춤.</b> 1단계부터 양쪽 식(3 + ? = 4 + 5) · 20까지 셈(5 + 15) · 1단을 1 × 1부터.</td><td><code>m-balance</code> · <code>m-kicker</code> · <code>m-quickmul</code></td></tr>
+        <tr><td>수학 #53<br>받아올림 없는 세로셈 덧셈 <code>StackedAddition1</code></td><td><b>다시 만듦</b>(세로 덧셈 I). 자리마다 따로 더한 값(28 + 9 → 17, 20)을 적고, 그 값들을 모두 더해 답(37)을 내는 부분합 세로셈이에요.</td><td><code>m-add1</code></td></tr>
+        <tr><td>수학 #47<br>스피드 나눗셈 <code>QuickDiv</code></td><td><b>다시 만듦</b>(빠른 나눗셈). 6줄 나눗셈 판(2 ÷ 2, 4 ÷ 2 …)을 위에서부터 숫자판 · 손글씨로 풀어요.</td><td><code>m-div</code></td></tr>
+        <tr><td>수학 #68<br>탈리 묶음 나눗셈 <code>TallyDivision</code></td><td><b>다시 만듦</b>(탈리 나눗셈). 탈리를 저울 위에 똑같이 나눠 올리면 숫자판이 떠서 몫을 넣어요.</td><td><code>m-tallydiv</code></td></tr>
+        <tr><td>수학 #72<br>젤리 블록 나눗셈 <code>BlockDivision</code></td><td><b>다시 만듦</b>(젤리곰 나눗셈). &quot;2개씩 선택하세요&quot; — 젤리곰을 끌어 같은 개수씩 골라 봉지에 담고, 봉지 수를 답해요.</td><td><code>m-jellydiv</code></td></tr>
+        <tr><td>수학 #54 · #56<br>받아올림 덧셈 · 받아내림 뺄셈</td><td><b>확인만.</b> 영상(세로 덧셈 II · 세로 뺄셈)과 방식 · 난이도(38 + 8, 80 − 3)가 같아 그대로 뒀어요.</td><td><code>m-add2</code> · <code>m-sub2</code></td></tr>
+        <tr><td>수학 #27<br>작은 농장 <code>LittleFarm</code></td><td><b>다시 만듦.</b> 양이 하나씩 헛간에 들어가고 나오는 것을 지켜본 뒤, 헛간 안에 양이 몇 마리 있는지 보기 카드에서 골라요.</td><td><code>m-farm</code></td></tr>
+        <tr><td>수학 #16<br>관람차 <code>FerrisWheel</code></td><td><b>다시 만듦.</b> 수가 적힌 관람차 칸(1~12, 0~55를 5씩)을 시계처럼 차례대로 매달아요.</td><td><code>m-ferris</code></td></tr>
+        <tr><td>수학 #31<br>매트릭스 <code>Matrix</code></td><td><b>다시 만듦.</b> 수(2 · 3 · 4)와 물건(공 · 쿠키 · 주사위)이 만나는 칸에 점이 수만큼 있는 조각을 끼워요.</td><td><code>m-matrix</code></td></tr>
+        <tr><td>수학 #42<br>규칙 찾기 <code>Patterns</code></td><td><b>다시 만듦.</b> 식탁 위 음식이 놓인 규칙을 보고 물음표 자리에 올 음식을 바닥에서 끌어 올려요.</td><td><code>m-pattern</code></td></tr>
+        <tr><td>수학 #63<br>동물 마트 <code>WordGrocery</code></td><td><b>다시 만듦.</b> &quot;마실 것을 모두 찾아 주세요.&quot; — 진열대에서 그 종류를 모두 골라 바구니에 담아요.</td><td><code>m-grocery</code></td></tr>
+        <tr><td>수학 #22<br>백 칸 퍼즐 <code>HundredPuzzle</code></td><td><b>다시 만듦.</b> 한 칸짜리 숫자 대신 여러 칸짜리 조각을 100판 빈자리에 끼워요.</td><td><code>m-hpuzzle</code></td></tr>
+        <tr><td>수학 #26<br>짝 연결하기 <code>LineMatching</code></td><td><b>다시 만듦.</b> 위 · 아래 카드를 색깔 · 개수 · 모양 · 입체도형에 따라 선으로 이어요.</td><td><code>m-line</code></td></tr>
+        <tr><td>수학 #35<br>동전의 분류와 합 <code>MoneyGameKR</code></td><td><b>다시 만듦</b>(거스름돈 → 동전 모으기). 숫자 면 · 그림 면으로 놓인 동전을 알아보고 쟁반의 금액만큼 모아요.</td><td><code>m-change</code></td></tr>
+        <tr><td>수학 #61<br>시계 기차 <code>TrainTime</code></td><td><b>다시 만듦.</b> 바늘을 돌리는 대신, 시계를 읽고 시 · 분 숫자 카드를 기차 시각판에 끼워요.</td><td><code>m-clock</code></td></tr>
+        <tr><td>수학 #29<br>짝 맞추기 <code>MatchGame</code></td><td><b>다시 만듦</b>(같음과 다름 → 기억 놀이). 잠깐 본 카드에서 같은 수 두 장을 찾아요.</td><td><code>m-same</code></td></tr>
+        <tr><td>수학 #10<br>달력 퍼즐 <code>DaysAndWeeks</code></td><td><b>확인만.</b> 요일 그림 조각을 일요일부터 끼우는 방식이 같아 그대로 뒀어요.</td><td><code>m-days</code></td></tr>
+        <tr><td>수학 #15<br>떨어지는 도형 <code>FallingShapes</code></td><td><b>다시 만듦.</b> 쌓인 도형 판에서 &quot;정사각형을 모두 찾으세요.&quot;를 듣고 모두 누르면, 사라진 자리로 위 도형이 떨어져요.</td><td><code>m-falling</code></td></tr>
+        <tr><td>수학 #51<br>도형 맞추기 <code>ShapeMatching</code></td><td><b>다시 만듦.</b> 겹쳐 쌓인 카드에서 맨 위 카드끼리 모양이 같은 짝(색 · 방향 · 크기는 달라도 돼요)을 찾아 없애요.</td><td><code>m-shapes</code></td></tr>
+        <tr><td>수학 #94<br>도형 그리기 <code>DrawShapes</code></td><td><b>명세에 추가하고 새로 만듦.</b> 점판에서 점과 점을 이어 빠진 변을 그려 직각삼각형 · 직사각형 같은 도형을 완성해요.</td><td><code>m-draw</code></td></tr>
+        <tr><td>수학 #74<br>사물 관찰하기 <code>ObserveShapes</code></td><td><b>새로 만듦</b>(답을 기다리던 놀이). 물건을 옆 · 위아래 슬라이더로 돌려 보고 상자 · 둥근 기둥 · 공 모양 이름을 빈칸에 넣어요.</td><td><code>m-observe</code></td></tr>
+        <tr><td>수학 #49<br>길이 재기 I <code>RulerCount</code></td><td><b>다시 만듦.</b> 동전 · 클립을 점선 동그라미에 거듭 놓아 재고, 몇 번인지 숫자판으로 넣어요.</td><td><code>m-rulercount</code></td></tr>
+        <tr><td>수학 #50<br>길이 재기 II <code>RulerMeasure</code></td><td><b>다시 만듦.</b> 자 위 물건의 길이를 숫자판으로 넣어요. 1단계는 물건이 0에서 시작해요.</td><td><code>m-ruler</code></td></tr>
+        <tr><td>수학 #9 · #8<br>그래프 I · II <code>DataSort · DataMark</code></td><td><b>다시 만듦.</b> 물건을 쌓거나 쪽지를 보고 점을 찍어 그래프를 만든 뒤, 개수를 숫자판으로 넣고 더(가장) 많은 · 적은 것을 골라요.</td><td><code>m-graph1 · m-graph2</code></td></tr>
+        <tr><td>수학 #52<br>도형 따라 그리기 <code>ShapeTracing</code></td><td><b>난이도 맞춤.</b> 같은 방식이라 3단계를 영상처럼 마름모 · 타원 · 육각형으로 맞췄어요.</td><td><code>m-shapetrace</code></td></tr>
+        <tr><td>수학 #69 · #70 · #71<br>스터디 랩 <code>StudyGameAddSub · Division · Shapes</code></td><td><b>새로 만듦</b>(답을 기다리던 놀이). 개념 카드(세 수의 덧셈 · 구슬 묶기 · 입체도형의 면)를 본 뒤, 같은 개념 문제를 숫자판이나 보기로 풀어요.</td><td><code>m-studyas · m-studydiv · m-studyshape</code></td></tr>
+        <tr><td>수학 #91<br>경로 완성하기 <code>TrackPath</code></td><td><b>다시 만듦</b>(화살표 코딩 → 기찻길 돌리기). 조각을 눌러 돌려 기차부터 역까지 길을 이어요.</td><td><code>m-path</code></td></tr>
+        <tr><td>수학 #87 · #88<br>쌓기나무 세기 <code>CubeCount · CubeCountRemake</code></td><td><b>다시 만듦.</b> 입체로 쌓인 쌓기나무를 슬라이더로 돌려 보며 세고 숫자판으로 답해요.</td><td><code>m-cubes · m-cubes2</code></td></tr>
+        <tr><td>수학 #84<br>칠교놀이 <code>Tangram</code></td><td><b>다시 만듦.</b> 거의 다 맞춰진 그림의 빈 자리에 남은 조각을 돌려 끌어 놓아요.</td><td><code>m-tangram</code></td></tr>
+        <tr><td>수학 #85<br>데칼코마니 <code>Decalcomanie</code></td><td><b>난이도 맞춤.</b> 같은 방식이라 칸을 누를 때마다 색이 바뀌게, 동그라미 판과 가운데 점선으로 맞췄어요.</td><td><code>m-decal</code></td></tr>
+        <tr><td>수학 #80<br>순서 기억하기 <code>Flowers</code></td><td><b>새로 만듦</b>(답을 기다리던 놀이). 꽃이 피었다 지는 차례를 기억했다가 같은 차례로 눌러요.</td><td><code>m-flowers</code></td></tr>
+        <tr><td>수학 #81<br>아이스크림 옮기기 <code>IceCream</code></td><td><b>새로 만듦</b>(답을 기다리던 놀이). 맨 위 스쿱을 옮겨 작은 그림과 똑같이 만들어요. 하트만큼만 옮길 수 있어요.</td><td><code>m-icecream</code></td></tr>
+        <tr><td>수학 #92<br>탈출하기 <code>GridLock</code></td><td><b>다시 만듦.</b> 4×4 주차장에서 차를 끌어 옮겨 노란 택시를 빼내요. 돋보기와 다시 단추가 있어요.</td><td><code>m-gridlock</code></td></tr>
+        <tr><td>수학 #90<br>종이 접어 자르기 <code>Origami</code></td><td><b>다시 만듦</b>(펼친 모양 고르기 → 직접 접고 오리기). 접고, 모양을 올려 가위로 오린 뒤 펼쳐요.</td><td><code>m-origami</code></td></tr>
+        <tr><td>수학 #83<br>뻐꾸기 시계 <code>Cuckoo</code></td><td><b>다시 만듦</b>(시각 고르기 → 자리 기억하기). 가운데 수의 자리를 시계 둘레에서 눌러요.</td><td><code>m-cuckoo</code></td></tr>
+        <tr><td>수학 #82<br>바닷속 친구들 <code>UnderWater</code></td><td><b>다시 만듦</b>(수 세기 → 집중력). 동그라미 친 친구만 골라 눌러요.</td><td><code>m-sea</code></td></tr>
+        <tr><td>수학 #89<br>스도쿠 <code>Sudoku</code></td><td><b>난이도 맞춤.</b> 같은 방식이라 색깔 숫자 판, 숫자 조각 끌어 넣기, 123 ↔ ●■▲로 맞추고 빈칸 2개부터 시작해요.</td><td><code>m-sudoku</code></td></tr>
+        <tr><td>수학 #95<br>곱셈구구 마스터 <code>MultiplicationMaster</code></td><td><b>명세에 추가하고 새로 만듦.</b> 연습할 단을 고르면 공책이 열리고, 곱셈 10문제를 숫자판으로 풀어요. 회차 진도와 콤보, 셈마다 맞힌 횟수를 기록해요.</td><td><code>m-gugumaster</code></td></tr>
+        <tr><td>수학 #96<br>맞춤 연습문제 <code>AIPractice</code></td><td><b>명세에 추가하고 새로 만듦.</b> 영상의 &quot;AI 연습문제&quot;처럼 10문제를 만들되, AI 대신 아이가 틀렸던 셈 기록을 섞고 맞히는 만큼 어렵게 바꿔요. 연습장에 풀어 보고 숫자판으로 답해요.</td><td><code>m-aias · m-aimul · m-aidiv</code></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="extra" aria-labelledby="h-common">
+    <h2 id="h-common">명세 전체에서 빠진 정보</h2>
+    <p class="note">게임 하나가 아니라 명세 전체에 빠져 있어서 정해 주셔야 하는 것들이에요.</p>
+    <div class="table-wrap"><table class="plain">
+      <thead><tr><th scope="col">항목</th><th scope="col">정해야 할 것</th></tr></thead>
+      <tbody><tr><td>학습 콘텐츠</td><td>과목·단계별 낱말·문장·그림 목록. 그림은 우리가 정한 낱말로 따로 만들고 있어요(docs/asset-list.md 149장은 앱에 넣음, docs/asset-list-2.md에 다시 만들기 4건과 한글 수업 낱말 246장, docs/asset-list-3.md에 장면 배경 · 수학 배지 · 놀이 그림 29장이 남음)</td></tr><tr><td>단원 구성</td><td>한글 14챕터 106유닛, 영어 Level A~Z의 단원별 학습 글자·낱말 배정표 (수학은 Level A ~ H 상세 단계를 받아 정했어요)</td></tr><tr><td>수학 &quot;난이도 배분(5티어)&quot;</td><td><code>4,11,2,3,0</code> 같은 숫자가 단계 수인지. 지금은 Level A ~ H 상세 단계마다 놀이 난이도를 정해서 이 숫자는 쓰지 않아요</td></tr><tr><td>도입 영상</td><td>일일 수업의 개념 영상(Consonant, Vowel, Music_Colors 등) 목록과 파일</td></tr><tr><td>배치고사</td><td>영어 배치고사(영어 #27)의 문항 · 채점 · 시작 레벨 규칙. 한글은 나이로 시작 차시를 정하고, 5번마다 확인 퀴즈(한글 #73)로 복습 차시를 정해요</td></tr><tr><td>보상</td><td>몬스터 알 뽑기, 펫 육성, 하우스 꾸미기, 도서관 책장 규칙</td></tr><tr><td>자유 선택 잠금 해제</td><td>1.4 &quot;미션을 끝내면 자유 플레이 레벨이 순차 해제&quot;의 해제 단위</td></tr><tr><td>음성인식</td><td>말하기 놀이의 음성 처리 방식. 브라우저 음성인식은 기기 안에서 못 알아들으면 말소리를 브라우저 회사 서버로 보내므로, 보호자 동의 문구를 넣을지 자체 음성인식 서버를 둘지</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <p class="foot">design.md 1.2 · 2.2 · 3.2의 미니게임 표와 현재 구현(js/data.js의 GAMES)을 대조해 만들었어요. 같은 내용이 저장소의 docs/spec-gaps.md에도 있어요.</p>
+</main>
+
+<script>
+(() => {
+  const state = { s: '', g: '', q: '' };
+  const items = [...document.querySelectorAll('.item')];
+  const groups = [...document.querySelectorAll('.group')];
+  const result = document.getElementById('result');
+  const reset = document.getElementById('reset');
+  const empty = document.getElementById('empty');
+  const input = document.getElementById('q');
+  const press = (wrap, attr, val) => wrap.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[attr] === val)));
+
+  function apply() {
+    let shown = 0;
+    const q = state.q.trim().toLowerCase();
+    items.forEach((el) => {
+      const ok = (!state.s || el.dataset.s === state.s) && (!state.g || el.dataset.g === state.g) && (!q || el.dataset.text.includes(q));
+      el.hidden = !ok;
+      if (ok) shown++;
+    });
+    groups.forEach((g) => {
+      const n = g.querySelectorAll('.item:not([hidden])').length;
+      g.hidden = n === 0;
+      g.querySelector('.gcount').textContent = n + '종';
+    });
+    press(document.getElementById('subjFilter'), 's', state.s);
+    press(document.getElementById('groupFilter'), 'g', state.g);
+    result.textContent = shown + '종 표시';
+    empty.hidden = shown > 0;
+    reset.hidden = !(state.s || state.g || q);
+  }
+  document.getElementById('subjFilter').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { state.s = b.dataset.s; apply(); } });
+  document.getElementById('groupFilter').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { state.g = b.dataset.g; apply(); } });
+  input.addEventListener('input', () => { state.q = input.value; apply(); });
+  reset.addEventListener('click', () => { state.s = ''; state.g = ''; state.q = ''; input.value = ''; apply(); });
+  document.querySelector('.matrix').addEventListener('click', (e) => {
+    const b = e.target.closest('.cell[data-g], .rowbtn');
+    if (!b) return;
+    state.g = b.dataset.g;
+    state.s = b.dataset.s || '';
+    apply();
+    document.getElementById('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  const h = location.hash.slice(1);
+  if (/^[A-CE]$/.test(h)) { state.g = h; apply(); }
+})();
+</script>

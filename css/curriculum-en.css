@@ -1,0 +1,36 @@
+/* ---------- 영어 커리큘럼 판 (한글 판과 같은 틀, 영어 색) ---------- */
+.lesson-panel.en { --hangul: var(--english); --hangul-deep: var(--english-deep); --hangul-soft: var(--english-soft); background: linear-gradient(160deg, #fff 55%, var(--english-soft)); }
+.lesson-panel.en .lesson-glyph { width: auto; min-width: 72px; padding: 0 10px; font-family: var(--font-latin); font-weight: 700; font-size: 40px; }
+.lesson-panel.en .lesson-rule { font-family: var(--font-latin); font-weight: 700; font-size: 20px; }
+.lesson-panel.en .stage-track span { font-family: var(--font-latin); font-weight: 700; }
+.en-badge { color: var(--english-deep); border-color: color-mix(in srgb, var(--english) 35%, #fff); }
+/* 수학 커리큘럼 판 (같은 틀, 수학 색) */
+.lesson-panel.math { --hangul: var(--math); --hangul-deep: var(--math-deep); --hangul-soft: var(--math-soft); background: linear-gradient(160deg, #fff 55%, var(--math-soft)); }
+.lesson-panel.math .lesson-rule { font-family: var(--font-latin); font-weight: 700; font-size: 20px; white-space: nowrap; }
+.lesson-panel.math .lesson-steps li { cursor: help; }
+.lesson-panel.math .stage-track span { font-family: var(--font-latin); font-weight: 700; }
+.lesson-panel.math .math-days { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; color: var(--math-deep); font-family: var(--font-display); font-size: 15px; }
+.lesson-panel.math .math-days i { width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--math) 45%, #fff); }
+.lesson-panel.math .math-days i.done { background: var(--success-soft); box-shadow: inset 0 0 0 2px var(--success-deep); }
+.lesson-panel.math .math-days i.now { background: var(--math); box-shadow: 0 0 0 3px var(--math-soft); }
+.lesson-panel.math .math-days span { margin-left: 4px; }
+.math-badge { color: var(--math-deep); border-color: color-mix(in srgb, var(--math) 35%, #fff); }
+.level-goal { border-radius: 16px; background: rgba(255, 255, 255, .75); padding: 10px 16px; }
+.level-goal summary { cursor: pointer; font-family: var(--font-display); font-size: 17px; color: var(--english-deep); }
+.level-goal p { margin: 8px 0 2px; font-size: 16px; line-height: 1.65; color: var(--ink-soft); }
+
+/* 그림책 독해: 장면 순서 맞추기 · 질문 */
+.book-quiz { display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(720px, 100%); margin: 0 auto; }
+.book-quiz .bq-q { margin: 0; text-align: center; font-size: 24px; line-height: 1.4; }
+.bq-order { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; width: 100%; }
+.bq-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 0; border-radius: 18px; background: #fff; box-shadow: var(--shadow-card); cursor: pointer; font-size: 15px; line-height: 1.35; text-align: center; }
+.bq-card .bq-art { font-size: 34px; }
+.bq-card.placed { opacity: .35; pointer-events: none; }
+.bq-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 56px; width: 100%; padding: 8px; border-radius: 18px; background: rgba(255, 255, 255, .6); box-shadow: inset 0 0 0 2px var(--line); }
+.bq-line span { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--english-soft); font-size: 26px; position: relative; }
+.bq-line span b { position: absolute; top: -8px; left: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--english); color: #fff; font-size: 13px; display: grid; place-items: center; }
+
+@media (max-width: 700px) {
+  .lesson-panel.en .lesson-glyph { min-width: 56px; font-size: 30px; }
+  .book-quiz .bq-q { font-size: 20px; }
+}
