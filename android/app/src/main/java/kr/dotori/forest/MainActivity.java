@@ -46,7 +46,7 @@ import java.util.Locale;
  *   거기서 다른 주소를 적으면 /api/ping으로 도토리숲 서버인지 확인한 뒤 저장한다(기본 주소로 되돌릴 수 있음).
  * - 웹뷰에 없는 음성인식 · 음성 합성은 안드로이드 기능으로 대신하고, 웹 쪽(js/nativeBridge.js)에 DotoriNative로 넘겨준다.
  * - 서버 밖의 주소는 웹뷰에서 열지 않고 브라우저로 넘긴다.
- * - 앱 자체의 새 버전은 GitHub Releases(app-<번호>)에서 확인해서, 받으면 설치 화면을 연다. 놀이 화면은 서버가 늘 새로 준다.
+ * - 앱 자체의 새 버전은 앱을 열 때마다 GitHub Releases(app-<번호>)에서 확인해서, 받으면 설치 화면을 연다. 놀이 화면은 서버가 늘 새로 준다.
  */
 public class MainActivity extends Activity {
     private static final String PREFS = "dotori";
@@ -55,7 +55,10 @@ public class MainActivity extends Activity {
     private static final String SETUP = "file:///android_asset/setup.html";
     private static final int ASK_MIC = 1;
     private static final String APK = "application/vnd.android.package-archive";
-    private static final long UPDATE_EVERY = 6 * 3600 * 1000L;
+    // 앱을 열 때마다(화면으로 돌아올 때 포함) 새 버전을 보되, GitHub에 묻는 건 15분에 한 번
+    private static final long CHECK_EVERY = 15 * 60 * 1000L;
+    // "나중에"를 누른 버전은 6시간 동안 다시 묻지 않는다
+    private static final long ASK_AGAIN = 6 * 3600 * 1000L;
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private WebView web;
@@ -63,6 +66,7 @@ public class MainActivity extends Activity {
     private boolean ttsReady;
     private SpeechRecognizer recognizer;
     private int listening;
+    private AlertDialog asking;
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -100,7 +104,6 @@ public class MainActivity extends Activity {
         if (!hasMic()) requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO }, ASK_MIC);
         if (saved != null) web.restoreState(saved);
         else open();
-        checkUpdate();
     }
 
     private SharedPreferences prefs() { return getSharedPreferences(PREFS, MODE_PRIVATE); }
@@ -195,6 +198,13 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void retry() { main.post(MainActivity.this::open); }
+
+        @JavascriptInterface
+        public String appVersion() { return BuildConfig.VERSION_NAME; }
+
+        // 앱 설정의 "업데이트 확인": 간격과 "나중에"를 따지지 않고 바로 확인한다
+        @JavascriptInterface
+        public void checkUpdate() { main.post(() -> MainActivity.this.checkUpdate(true)); }
 
         @JavascriptInterface
         public void changeServer() { main.post(() -> showSetup(null)); }
@@ -302,10 +312,12 @@ public class MainActivity extends Activity {
     }
 
     /* ---------- 앱 업데이트 ---------- */
-    // 6시간에 한 번: 최신 릴리스(app-<번호>)가 지금 앱보다 새것이면 받을지 묻는다 (직접 빌드한 디버그 앱은 묻지 않음)
-    private void checkUpdate() {
-        if (BuildConfig.DEBUG) return;
-        if (System.currentTimeMillis() - prefs().getLong("updateCheckedAt", 0) < UPDATE_EVERY) return;
+    // 최신 릴리스(app-<번호>)가 지금 앱보다 새것이면 받을지 묻는다 (직접 빌드한 디버그 앱은 manual일 때만)
+    private void checkUpdate(boolean manual) {
+        if (BuildConfig.DEBUG && !manual) return;
+        long now = System.currentTimeMillis();
+        if (!manual && now - prefs().getLong("updateCheckedAt", 0) < CHECK_EVERY) return;
+        if (manual) Toast.makeText(this, "새 버전을 확인하고 있어요…", Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             try {
                 HttpURLConnection c = (HttpURLConnection) new URL("https://api.github.com/repos/" + BuildConfig.UPDATE_REPO + "/releases/latest").openConnection();
@@ -313,7 +325,7 @@ public class MainActivity extends Activity {
                 c.setRequestProperty("User-Agent", "DotoriApp");
                 c.setConnectTimeout(8000);
                 c.setReadTimeout(8000);
-                if (c.getResponseCode() != 200) return;
+                if (c.getResponseCode() != 200) throw new java.io.IOException("HTTP " + c.getResponseCode());
                 java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
                 java.io.InputStream in = c.getInputStream();
                 byte[] buf = new byte[8192];
@@ -324,30 +336,36 @@ public class MainActivity extends Activity {
                 JSONObject release = new JSONObject(out.toString("UTF-8"));
                 prefs().edit().putLong("updateCheckedAt", System.currentTimeMillis()).apply();
                 String tag = release.optString("tag_name");
-                if (!tag.startsWith("app-")) return;
-                int code = Integer.parseInt(tag.substring(4));
+                int code = tag.startsWith("app-") ? Integer.parseInt(tag.substring(4)) : 0;
                 JSONArray assets = release.optJSONArray("assets");
                 String url = null;
                 for (int i = 0; assets != null && i < assets.length(); i++) {
                     JSONObject a = assets.getJSONObject(i);
                     if (a.optString("name").endsWith(".apk")) url = a.optString("browser_download_url");
                 }
-                if (code > BuildConfig.VERSION_CODE && url != null) {
-                    final String apkUrl = url;
-                    main.post(() -> askUpdate(code, apkUrl));
-                }
-            } catch (Exception ignored) {
+                final String apkUrl = url;
+                main.post(() -> {
+                    if (code > BuildConfig.VERSION_CODE && apkUrl != null) {
+                        boolean later = prefs().getInt("laterCode", 0) == code
+                            && System.currentTimeMillis() - prefs().getLong("laterAt", 0) < ASK_AGAIN;
+                        if (manual || !later) askUpdate(code, apkUrl);
+                    } else if (manual) {
+                        Toast.makeText(this, "지금이 최신 버전이에요 (" + BuildConfig.VERSION_NAME + ")", Toast.LENGTH_LONG).show();
+                    }
+                });
+            } catch (Exception e) {
+                if (manual) main.post(() -> Toast.makeText(this, "새 버전을 확인하지 못했어요. 인터넷 연결을 확인해 주세요.", Toast.LENGTH_LONG).show());
             }
         }).start();
     }
 
     private void askUpdate(int code, String url) {
-        if (isFinishing()) return;
-        new AlertDialog.Builder(this)
+        if (isFinishing() || (asking != null && asking.isShowing())) return;
+        asking = new AlertDialog.Builder(this)
             .setTitle("새 버전이 있어요")
             .setMessage("도토리숲 앱 1." + code + " 버전을 받아서 설치할까요?\n(놀이 화면은 서버에서 늘 새로 받아요. 이 업데이트는 앱 자체를 고쳐요.)")
             .setPositiveButton("업데이트", (d, w) -> download(code, url))
-            .setNegativeButton("나중에", null)
+            .setNegativeButton("나중에", (d, w) -> prefs().edit().putInt("laterCode", code).putLong("laterAt", System.currentTimeMillis()).apply())
             .show();
     }
 
@@ -410,6 +428,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         web.onResume();
+        checkUpdate(false);
     }
 
     @Override
