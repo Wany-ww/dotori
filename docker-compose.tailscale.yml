@@ -1,7 +1,8 @@
-# 도토리숲 서버 + Tailscale (유그린 DXP2800 등 어느 NAS든)
-# 공유기 포트를 열거나 DDNS · 인증서를 따로 만들지 않아요. 같은 Tailscale 계정(tailnet)에 들어온 기기만
+# 도토리숲 서버 + Tailscale Funnel (유그린 DXP2800 등 어느 NAS든)
+# 공유기 포트를 열거나 DDNS · 인증서를 따로 만들지 않아요. Tailscale Funnel이 인터넷에 이 주소를 열어 줘서
 #   https://dotori.<tailnet 이름>.ts.net
-# 으로 접속하고, HTTPS 인증서는 Tailscale이 자동으로 받아 줘요. 설정 순서는 docs/nas.md의 "유그린 DXP2800 + Tailscale".
+# 휴대폰에 Tailscale 앱이 없어도 접속할 수 있고, HTTPS 인증서도 Tailscale이 자동으로 받아 줘요.
+# 설정 순서는 docs/nas.md의 "유그린 DXP2800 + Tailscale".
 # UGOS Pro: Docker → 프로젝트 → 생성에 이 내용을 그대로 붙여 넣어요.
 services:
   tailscale:
@@ -24,14 +25,15 @@ services:
     ports:
       # 집 와이파이 안에서 바로 쓰는 주소 (http://NAS내부IP:5173)
       - "5173:5173"
-    # tailnet의 https(443) 요청을 같은 네트워크의 도토리숲(5173)으로 넘기는 설정을 만들고 Tailscale을 켠다
-    # (${TS_CERT_DOMAIN}은 Tailscale이 dotori.<tailnet>.ts.net으로 바꿔 줘요. Funnel(인터넷 공개)은 끔)
+    # https(443) 요청을 같은 네트워크의 도토리숲(5173)으로 넘기는 설정을 만들고 Tailscale을 켠다
+    # (${TS_CERT_DOMAIN}은 Tailscale이 dotori.<tailnet>.ts.net으로 바꿔 줘요. AllowFunnel true = 인터넷에 공개,
+    #  false로 바꾸면 Tailscale에 로그인한 기기에서만 열려요)
     entrypoint:
       - /bin/sh
       - -c
       - |
         cat > /var/lib/tailscale/serve.json <<'JSON'
-        {"TCP":{"443":{"HTTPS":true}},"Web":{"$${TS_CERT_DOMAIN}:443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:5173"}}}},"AllowFunnel":{"$${TS_CERT_DOMAIN}:443":false}}
+        {"TCP":{"443":{"HTTPS":true}},"Web":{"$${TS_CERT_DOMAIN}:443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:5173"}}}},"AllowFunnel":{"$${TS_CERT_DOMAIN}:443":true}}
         JSON
         exec /usr/local/bin/containerboot
 

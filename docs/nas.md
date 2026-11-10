@@ -2,10 +2,10 @@
 
 도토리숲 서버(`server.js`)를 집의 NAS에서 Docker로 돌리고, 밖에서는 안드로이드 앱(APK)으로 접속해요.
 
-지금 쓰는 구성은 **유그린 DXP2800 + Tailscale**이에요(아래 1). 공유기 포트를 열지 않고, Tailscale에 들어온 기기만 접속해요.
+지금 쓰는 구성은 **유그린 DXP2800 + Tailscale Funnel**이에요(아래 1). 공유기 포트를 열지 않고, Tailscale Funnel이 `https://dotori.<tailnet>.ts.net` 주소를 인터넷에 열어 줘요. 휴대폰에는 Tailscale 앱이 없어도 돼요.
 
 ```
-[휴대폰 · 태블릿: Tailscale 켜짐 + 도토리숲 앱] ──Tailscale(암호화)──▶ [NAS: dotori-tailscale ─https→ dotori :5173] ──▶ NAS의 data 폴더
+[휴대폰 · 태블릿: 도토리숲 앱] ──https──▶ [Tailscale Funnel 입구] ──Tailscale(암호화)──▶ [NAS: dotori-tailscale ─▶ dotori :5173] ──▶ NAS의 data 폴더
 ```
 
 시놀로지에서 DDNS · 공유기 포트 포워딩으로 공개하는 방법도 4에 남겨 두었어요.
@@ -19,26 +19,26 @@
 
 ## 방법 고르기
 
-| | Tailscale (지금 쓰는 방법) | 공개 주소(DDNS + 포트 포워딩) |
+| | Tailscale Funnel (지금 쓰는 방법) | 공개 주소(DDNS + 포트 포워딩) |
 |---|---|---|
 | 쓰는 파일 | `docker-compose.tailscale.yml` | `docker-compose.yml` |
-| 접속할 수 있는 기기 | Tailscale에 로그인해 켠 기기만 | 주소를 아는 누구나(로그인 화면까지) |
+| 접속할 수 있는 기기 | 주소를 아는 누구나(로그인 화면까지) | 주소를 아는 누구나(로그인 화면까지) |
 | 공유기 설정 | 없음 | 80 · 443 포트 포워딩 |
 | 주소 · HTTPS 인증서 | `https://dotori.<tailnet>.ts.net`, Tailscale이 자동 발급 | DDNS + Let's Encrypt (시놀로지는 DSM에서, 유그린은 따로 필요) |
 | 공인 IP | 필요 없음 | 필요 |
-| 휴대폰 준비 | Tailscale 앱 설치 · 로그인 | 없음 |
+| 휴대폰 준비 | 없음 | 없음 |
 | 자동 업데이트 | 같음 | 같음 |
 
 두 방법 모두 compose 파일 하나만 있으면 돼요. 이미지를 직접 빌드하지 않고 `node:22-alpine`에 git을 깔아 저장소를 받는 방식이라, NAS의 프로젝트 화면이 빌드를 지원하지 않아도 돼요.
 
-## 1. 유그린 DXP2800 + Tailscale (지금 쓰는 방법)
+## 1. 유그린 DXP2800 + Tailscale Funnel (지금 쓰는 방법)
 
 DXP2800(UGOS Pro, Intel N100)은 Docker를 쓸 수 있어요. `docker-compose.tailscale.yml`에 도토리숲 서버와 Tailscale을 함께 넣었어요.
 
-- 공유기 포트를 열지 않아요. 밖에서는 Tailscale에 로그인한 기기만 들어올 수 있어요.
-- 주소는 `https://dotori.<tailnet 이름>.ts.net`이고, HTTPS 인증서는 Tailscale이 자동으로 받고 갱신해요.
-- 공인 IP가 없어도 돼요.
-- Funnel(인터넷 공개)은 꺼 두었어요.
+- 공유기 포트를 열지 않아요. **Funnel**이 `https://dotori.<tailnet 이름>.ts.net`을 인터넷에 열어 줘서, 휴대폰에 Tailscale이 없어도 접속돼요.
+- HTTPS 인증서는 Tailscale이 자동으로 받고 갱신해요. 공인 IP가 없어도 돼요.
+- 주소를 아는 사람은 누구나 로그인 화면까지 볼 수 있어요. 보호자 계정 비밀번호를 8자 이상으로 길게 정하고, 로그인을 10번 틀린 IP는 10분 동안 막아요.
+- Funnel은 443 포트로만 열려요. 인터넷 공개를 끄려면 compose의 `"AllowFunnel"…true`를 `false`로 바꿔 다시 배포해요. 그러면 Tailscale에 로그인한 기기에서만 열려요.
 
 ### 1. Tailscale 계정 준비 (처음 한 번)
 
@@ -47,7 +47,14 @@ DXP2800(UGOS Pro, Intel N100)은 Docker를 쓸 수 있어요. `docker-compose.ta
    - **MagicDNS**가 켜져 있는지 확인해요(새 계정은 보통 켜져 있어요).
    - 아래쪽 **HTTPS Certificates → Enable HTTPS**를 눌러요.
    - 같은 화면 위쪽 **Tailnet name**(예: `tail1234.ts.net`)을 적어 둬요. 이것이 주소의 뒷부분이에요.
-3. (선택) **Settings → Keys → Generate auth key**로 인증 키를 만들면 NAS를 로그인 링크 없이 붙일 수 있어요. 키는 남에게 보여 주지 마세요.
+3. **Funnel 허용**: 관리 화면 **Access controls**(정책 파일)에 아래 `nodeAttrs` 항목이 있는지 봐요. 새 계정은 보통 이미 들어 있어요. 없으면 정책 맨 바깥 `{ }` 안에 넣고 **Save**해요.
+   ```json
+   "nodeAttrs": [
+     { "target": ["autogroup:member"], "attr": ["funnel"] }
+   ],
+   ```
+   - 이미 `nodeAttrs`가 있으면 그 목록 안에 `{ "target": ["autogroup:member"], "attr": ["funnel"] }` 한 줄만 더해요.
+4. (선택) **Settings → Keys → Generate auth key**로 인증 키를 만들면 NAS를 로그인 링크 없이 붙일 수 있어요. 키는 남에게 보여 주지 마세요.
 
 ### 2. NAS에 올리기
 
@@ -56,12 +63,13 @@ DXP2800(UGOS Pro, Intel N100)은 Docker를 쓸 수 있어요. `docker-compose.ta
    - 프로젝트 이름: `dotori`
    - 저장 위치: 원하는 공유 폴더(예: `docker/dotori`). 이 폴더 아래에 `data/`(기록) · `tailscale/`(Tailscale 로그인 상태)가 생겨요.
    - Compose 설정: 저장소의 `docker-compose.tailscale.yml` 내용을 통째로 붙여 넣어요.
-   - 1번의 3단계에서 인증 키를 만들었다면 `# - TS_AUTHKEY=…` 줄의 `#`을 지우고 키를 넣어요.
+   - 1번의 4단계에서 인증 키를 만들었다면 `# - TS_AUTHKEY=…` 줄의 `#`을 지우고 키를 넣어요.
 3. **배포(Deploy)** → `dotori-tailscale` · `dotori` 두 컨테이너가 켜져요. 처음에는 저장소를 받느라 1~2분 걸려요.
 4. 인증 키를 넣지 않았다면 **컨테이너 → dotori-tailscale → 로그**에서 `https://login.tailscale.com/a/…` 링크를 찾아 열고 로그인해요. Tailscale 관리 화면 **Machines**에 `dotori`가 보이면 연결된 거예요.
 5. 확인
    - 집 와이파이의 컴퓨터에서 `http://<NAS 내부 IP>:5173` → 로그인 화면
-   - Tailscale을 켠 기기에서 `https://dotori.<tailnet 이름>.ts.net` → 로그인 화면. 처음 열 때 인증서를 받느라 몇 초 걸릴 수 있어요.
+   - 휴대폰 데이터(와이파이 끄고)로 `https://dotori.<tailnet 이름>.ts.net` → 로그인 화면. 처음 열 때 인증서를 받느라 10초쯤 걸리고, Funnel 주소가 인터넷에 알려지기까지 몇 분 걸릴 수 있어요.
+   - **dotori-tailscale → 터미널**에서 `tailscale funnel status`를 치면 `https://dotori.….ts.net (Funnel on)`과 `proxy http://127.0.0.1:5173`이 보여야 해요.
 
 관리자 계정은 **Docker → 컨테이너 → dotori → 터미널**에서 만들어요.
 
@@ -71,12 +79,8 @@ node /app/src/tools/make-admin.js <아이디> <비밀번호> 관리자
 
 ### 3. 휴대폰 · 태블릿 준비
 
-1. Play 스토어에서 **Tailscale** 앱을 설치하고, 1번과 같은 계정으로 로그인해요. VPN 연결을 허용하면 켜져요.
-   - 다른 가족 계정을 쓰려면 Tailscale 관리 화면 **Users → Invite users**로 초대하거나, Machines에서 `dotori`를 **Share**해요.
-2. 도토리숲 앱(아래 3)을 설치하고, 서버 주소에 `https://dotori.<tailnet 이름>.ts.net`을 넣어요.
-3. 밖에서 쓸 때는 Tailscale이 켜져 있어야 해요. 꺼져 있으면 앱에 "서버에 연결하지 못했어요"가 나와요.
-   - Tailscale 앱 설정에서 **항상 켜기(Always-on VPN)**를 켜 두면 편해요.
-   - 집 와이파이에서만 쓸 때는 Tailscale 없이 `http://<NAS 내부 IP>:5173`을 넣어도 돼요. 주소는 한 기기에 하나만 저장되니, 밖에서도 쓸 기기에는 ts.net 주소를 넣어요.
+1. 도토리숲 앱(아래 3)을 설치하고, 서버 주소에 `https://dotori.<tailnet 이름>.ts.net`을 넣어요.
+2. Tailscale 앱은 없어도 돼요. 집 와이파이 · 데이터 어디서나 같은 주소로 열려요.
 
 ### 업데이트 · 백업
 
