@@ -35,25 +35,25 @@
   </div>
   <form id="form">
     <label for="url">서버 주소</label>
-    <input id="url" type="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="https://dotori.example.synology.me">
+    <input id="url" type="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="https://dotori.tail1234.ts.net">
     <button id="go" type="submit">연결하기</button>
   </form>
   <div class="msg" id="msg" role="status" aria-live="polite"></div>
-  <p class="hint">바깥(데이터 · 다른 와이파이)에서 쓰려면 https:// 주소를 권해요. 집 와이파이 안에서는 http://192.168.0.10:5173 처럼 NAS의 내부 주소도 돼요.</p>
+  <p class="hint">밖(데이터 · 다른 와이파이)에서는 이 휴대폰에서 Tailscale 앱을 켜고, https://dotori.<i>tailnet 이름</i>.ts.net 주소를 적어요. 집 와이파이 안에서는 http://192.168.0.10:5173 처럼 NAS의 내부 주소도 돼요.</p>
 </main>
 <script>
   const q = new URLSearchParams(location.search);
   const $ = (id) => document.getElementById(id);
   const msg = (text, cls) => { $('msg').textContent = text; $('msg').className = `msg ${cls || ''}`; };
   const WHY = {
-    offline: '서버에 연결하지 못했어요. 주소와 포트, 인터넷 연결, NAS가 켜져 있는지 확인해 주세요.',
+    offline: '서버에 연결하지 못했어요. 이 휴대폰의 Tailscale이 켜져 있는지, 주소와 NAS가 켜져 있는지 확인해 주세요.',
     ssl: '보안 인증서(HTTPS)를 확인할 수 없어요. NAS의 인증서 설정을 확인하거나, 집 안에서는 http:// 내부 주소로 해 보세요.',
     notdotori: '이 주소에서 도토리숲 서버를 찾지 못했어요. 주소와 포트를 확인해 주세요.',
   };
   $('url').value = q.get('server') || '';
   if (q.get('error') === 'offline' && q.get('server')) {
     $('title').textContent = '서버에 연결하지 못했어요';
-    $('lead').textContent = '인터넷 연결이나 NAS가 꺼져 있는지 확인한 뒤 다시 시도해 주세요. 주소가 바뀌었으면 아래에서 고쳐요.';
+    $('lead').textContent = '이 휴대폰의 Tailscale이 켜져 있는지, 인터넷 연결과 NAS를 확인한 뒤 다시 시도해 주세요. 주소가 바뀌었으면 아래에서 고쳐요.';
     $('offline').hidden = false;
   }
   $('retry').addEventListener('click', () => { msg('다시 연결하고 있어요…', 'wait'); window.DotoriNative.retry(); });

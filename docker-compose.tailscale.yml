@@ -1,0 +1,63 @@
+# 도토리숲 서버 + Tailscale (유그린 DXP2800 등 어느 NAS든)
+# 공유기 포트를 열거나 DDNS · 인증서를 따로 만들지 않아요. 같은 Tailscale 계정(tailnet)에 들어온 기기만
+#   https://dotori.<tailnet 이름>.ts.net
+# 으로 접속하고, HTTPS 인증서는 Tailscale이 자동으로 받아 줘요. 설정 순서는 docs/nas.md의 "유그린 DXP2800 + Tailscale".
+# UGOS Pro: Docker → 프로젝트 → 생성에 이 내용을 그대로 붙여 넣어요.
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: dotori-tailscale
+    hostname: dotori
+    restart: unless-stopped
+    environment:
+      # tailnet에서 보이는 이름 → https://dotori.<tailnet>.ts.net
+      - TS_HOSTNAME=dotori
+      - TS_STATE_DIR=/var/lib/tailscale
+      # 커널 모듈 · 관리자 권한 없이 도는 방식
+      - TS_USERSPACE=true
+      - TS_SERVE_CONFIG=/var/lib/tailscale/serve.json
+      # 인증 키를 넣으면 로그인 없이 바로 붙어요. 비워 두면 컨테이너 로그에 나오는 링크로 한 번 로그인해요
+      # - TS_AUTHKEY=tskey-auth-여기에-키
+    volumes:
+      # Tailscale 로그인 상태 (지우면 다시 로그인해야 해요)
+      - ./tailscale:/var/lib/tailscale
+    ports:
+      # 집 와이파이 안에서 바로 쓰는 주소 (http://NAS내부IP:5173)
+      - "5173:5173"
+    # tailnet의 https(443) 요청을 같은 네트워크의 도토리숲(5173)으로 넘기는 설정을 만들고 Tailscale을 켠다
+    # (${TS_CERT_DOMAIN}은 Tailscale이 dotori.<tailnet>.ts.net으로 바꿔 줘요. Funnel(인터넷 공개)은 끔)
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        cat > /var/lib/tailscale/serve.json <<'JSON'
+        {"TCP":{"443":{"HTTPS":true}},"Web":{"$${TS_CERT_DOMAIN}:443":{"Handlers":{"/":{"Proxy":"http://127.0.0.1:5173"}}}},"AllowFunnel":{"$${TS_CERT_DOMAIN}:443":false}}
+        JSON
+        exec /usr/local/bin/containerboot
+
+  dotori:
+    image: node:22-alpine
+    container_name: dotori
+    restart: unless-stopped
+    # Tailscale 컨테이너와 네트워크를 함께 써서, Tailscale이 127.0.0.1:5173으로 넘겨줄 수 있게 한다
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    environment:
+      - TZ=Asia/Seoul
+      - PORT=5173
+      - DATA_DIR=/app/data
+      - APP_DIR=/app/src
+      - REPO_URL=https://github.com/Wany-ww/dotori.git
+      - BRANCH=main
+      # 새 커밋 확인 간격(분). AUTO_UPDATE=0 이면 자동 업데이트를 꺼요
+      - UPDATE_MINUTES=5
+      - AUTO_UPDATE=1
+    # git을 깔고, 저장소가 없으면 받은 뒤, 저장소 안의 실행기(tools/runner.js)를 돌린다
+    command: >-
+      sh -c 'apk add --no-cache git >/dev/null &&
+      ([ -d "$$APP_DIR/.git" ] || git clone --depth 1 --branch "$$BRANCH" "$$REPO_URL" "$$APP_DIR") &&
+      exec node "$$APP_DIR/tools/runner.js"'
+    volumes:
+      # 아이 · 보호자 기록이 쌓이는 곳 (NAS의 이 폴더를 백업해 주세요)
+      - ./data:/app/data
