@@ -202,7 +202,8 @@ export function mount(stage, ctx) {
     ctx.prompt(
       hangul
         ? `출발 시각 글을 읽고, ${cfg.lockMin ? '짧은바늘' : '짧은바늘과 긴바늘'}을 끌어 시계를 맞춘 뒤 출발!을 눌러요.`
-        : `기차 출발 시각을 보고, ${cfg.lockMin ? '짧은바늘' : '짧은바늘과 긴바늘'}을 끌어 시계를 맞춘 뒤 ${ko ? '출발' : 'Go'}!를 눌러요.`,
+        : ko ? `기차 출발 시각을 보고, ${cfg.lockMin ? '짧은바늘' : '짧은바늘과 긴바늘'}을 끌어 시계를 맞춘 뒤 출발!을 눌러요.`
+        : `Look at the departure time. Drag ${cfg.lockMin ? 'the short hand' : 'the short hand and the long hand'} to set the clock, then press Go!`,
       () => en(ko ? ['기차는', ...words, '에 떠나요'] : ['What time does the train leave?', ...words]),
       // 한글판은 글을 스스로 읽도록, 3단계부터 시각을 저절로 읽어 주지 않는다
       { auto: !hangul || ctx.level <= 2 },

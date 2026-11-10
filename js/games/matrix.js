@@ -222,8 +222,9 @@ export function mount(stage, ctx) {
       hangul ? '한글표의 빈칸을 채워요. 왼쪽 자음과 위쪽 모음이 만나는 칸에 들어갈 글자 조각을 끼워요!'
         : math ? '왼쪽의 수와 위쪽의 물건이 만나는 칸에, 그 물건에 점이 수만큼 있는 조각을 끼워요!'
         : words ? '왼쪽 첫소리와 위쪽 끝소리를 이어 읽고, 두 조각이 만나는 칸에 그 단어를 끼워요!'
-        : cfg.words ? '맨 위와 왼쪽의 영어 낱말을 읽고, 두 낱말이 만나는 칸에 맞는 조각을 끼워요!'
-        : '가로줄과 세로줄이 만나는 칸에, 둘을 모두 닮은 조각을 끼워요!',
+        // 퍼즐 매트릭스(영어판)는 안내도 영어로만
+        : cfg.words ? 'Read the words on the top and on the left. Put the right piece where they meet!'
+        : 'Find the piece that matches both its row and its column!',
       () => (hangul ? say('한글표를 완성해 봐요!') : math ? say('어느 자리에 어떤 조각을 맞추면 좋을까요?') : en(kind === 'dress' ? 'Who goes here?' : words ? 'Make the words!' : 'What goes here?')),
     );
   }

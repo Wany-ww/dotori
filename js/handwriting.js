@@ -232,8 +232,18 @@ export function readDigit(drawn) {
 }
 
 // 아이에게 들려줄 말
-export function advice(r) {
+export function advice(r, lang = 'ko') {
   const k = r.want + 1;
+  if (lang === 'en') {
+    const nth = ['first', 'second', 'third', 'fourth', 'fifth'][r.want] || 'next';
+    return {
+      'count-few': 'A stroke is missing. Can you add it?',
+      'count-many': 'Too many strokes! Draw each stroke in one go.',
+      order: 'Wrong order! Draw the shining stroke next.',
+      direction: `Start the ${nth} stroke from the other end.`,
+      shape: `Try the ${nth} stroke again, like the model.`,
+    }[r.problem] || '';
+  }
   return {
     'count-few': '획이 모자라요. 빠진 획을 더 써 볼까요?',
     'count-many': '획이 너무 많아요. 한 획은 한 번에 이어서 써요.',

@@ -266,11 +266,11 @@ export const GAMES = {
   'e-paint': { subject: 'english', module: 'paintWord', scene: 'craft', title: '단어 그리기', icon: '🎨', uKey: 'PainttheWord', desc: '그리고 싶은 것을 영어로 말하면 붓이 도화지에 그려 줘요.', mic: true },
   'e-petdict': { subject: 'english', module: 'sayAfter', opts: { cast: 'pet' }, scene: 'chalk', title: '받아쓰기', icon: '🦊', uKey: 'PetDictation', desc: '단어 카드를 소리 내어 읽어 주면 여우가 칠판에 받아써요.', mic: true, minLevel: 2 },
   'e-alien': { subject: 'english', module: 'alienChat', scene: 'space', title: '외계인 챗', icon: '👽', uKey: 'AlienChat', desc: '지구로 이사 온 외계인 친구와 영어로 화상 통화를 해요.', mic: true, minLevel: 2 },
-  'e-count': { subject: 'english', module: 'enCount', scene: 'bath', title: '수 세기 기초', icon: '🔢', uKey: 'BasicCounting', desc: '물건을 하나씩 눌러 영어로 세고, 맞는 숫자 카드를 골라요.' },
-  'e-days': { subject: 'english', module: 'calendarPuzzle', scene: 'table', title: '달력 퍼즐', icon: '📅', uKey: 'DaysandWeeks', desc: '요일 · 달 · 날짜 조각을 제자리에 끼워 한 주, 한 해, 한 달을 완성해요.' },
-  'e-matrix': { subject: 'english', module: 'matrix', scene: 'wood', title: '퍼즐 매트릭스', icon: '🧮', uKey: 'Matrix', desc: '가로줄과 세로줄이 만나는 칸에 둘을 모두 닮은 조각을 끼워요.' },
-  'e-numpuz': { subject: 'english', module: 'numberPuzzle', scene: 'forestfloor', title: '숫자 퍼즐', icon: '🔟', uKey: 'NumberPuzzle', desc: '나무판의 숫자 홈에 숫자 조각을 끼우며 영어 이름을 들어요.' },
-  'e-numtrace': { subject: 'english', module: 'numberTrace', scene: 'night', title: '숫자 따라쓰기', icon: '✏️', uKey: 'NumberTracing', desc: '수만큼 점을 보고, 숫자를 획순대로 따라 쓰며 영어로 읽어요.' },
+  'e-count': { subject: 'english', module: 'enCount', scene: 'bath', title: '수 세기 기초', enOnly: true, titleEn: 'How Many?', icon: '🔢', uKey: 'BasicCounting', desc: '물건을 하나씩 눌러 영어로 세고, 맞는 숫자 카드를 골라요.' },
+  'e-days': { subject: 'english', module: 'calendarPuzzle', scene: 'table', title: '달력 퍼즐', enOnly: true, titleEn: 'Days and Months', icon: '📅', uKey: 'DaysandWeeks', desc: '요일 · 달 · 날짜 조각을 제자리에 끼워 한 주, 한 해, 한 달을 완성해요.' },
+  'e-matrix': { subject: 'english', module: 'matrix', scene: 'wood', title: '퍼즐 매트릭스', enOnly: true, titleEn: 'Puzzle Matrix', icon: '🧮', uKey: 'Matrix', desc: '가로줄과 세로줄이 만나는 칸에 둘을 모두 닮은 조각을 끼워요.' },
+  'e-numpuz': { subject: 'english', module: 'numberPuzzle', scene: 'forestfloor', title: '숫자 퍼즐', enOnly: true, titleEn: 'Number Puzzle', icon: '🔟', uKey: 'NumberPuzzle', desc: '나무판의 숫자 홈에 숫자 조각을 끼우며 영어 이름을 들어요.' },
+  'e-numtrace': { subject: 'english', module: 'numberTrace', scene: 'night', title: '숫자 따라쓰기', enOnly: true, titleEn: 'Number Tracing', icon: '✏️', uKey: 'NumberTracing', desc: '수만큼 점을 보고, 숫자를 획순대로 따라 쓰며 영어로 읽어요.' },
   // 챌린지(주간 평가): 그 차시 내용으로 5문제, 문제마다 한 번만 고른다
   'e-wchal': { subject: 'english', module: 'enChallenge', opts: { kind: 'word' }, title: '워드 챌린지', icon: '🏕️', uKey: 'WordChallenge', desc: '단어를 읽거나 듣고 알맞은 그림을 골라요. 5문제 챌린지!' },
   'e-pchal': { subject: 'english', module: 'enChallenge', opts: { kind: 'phonics' }, title: '파닉스 챌린지', icon: '🏛️', uKey: 'PhonicsChallenge', desc: '그림과 소리를 듣고 빈칸(_ad)에 들어갈 글자를 골라요. 5문제 챌린지!' },
@@ -286,10 +286,10 @@ export const GAMES = {
   'e-wmatrix': { subject: 'english', module: 'matrix', opts: { kind: 'word' }, scene: 'wood', title: '단어 매트릭스', icon: '🔡', uKey: 'WordMatrix', desc: '첫소리와 끝소리가 만나는 칸에 두 조각을 이은 단어를 끼워요.' },
   'e-space': { subject: 'english', module: 'spaceRepair', scene: 'space', title: '우주 정비소', icon: '🛸', uKey: 'SpaceRepairShop', desc: '고장 난 우주선 화면의 그림에 맞는 단어 부품을 끌어 올려 고쳐 줘요.' },
   'e-jelly': { subject: 'english', module: 'jellyAffix', scene: 'pond', title: '젤리 붙이기', icon: '🍬', uKey: 'JellyAffix', desc: '단어 젤리 끝에 -s, -es, -en 같은 젤리를 붙여 문장을 완성해요.', minLevel: 2 },
-  'e-pattern': { subject: 'english', module: 'patterns', scene: 'meadow', title: '패턴 기차', icon: '🚃', uKey: 'PatternTrain', desc: '기차 칸의 영어 낱말(cat, dog…)을 듣고 읽으며 규칙을 찾아요. 숫자 기차는 영어로 세어요.' },
-  'e-shapes': { subject: 'english', module: 'shapes', scene: 'craft', title: '도형 맞추기', icon: '🔷', uKey: 'ShapeMatching', desc: '영어로 도형 이름을 듣고 알맞은 도형을 찾아요.' },
-  'e-shapetrace': { subject: 'english', module: 'trace', opts: { set: 'shapes' }, scene: 'beach', title: '도형 따라그리기', icon: '🔺', uKey: 'ShapeTracing', desc: '도형을 한 번에 따라 그리며 영어 이름을 들어요.' },
-  'e-clock': { subject: 'english', module: 'clockTrain', scene: 'city', title: '시계 기차', icon: '⏰', uKey: 'TrainTime', desc: '기차 출발 시각을 보고 시계바늘을 돌려 맞춰요. 시각을 영어로 읽어요.', minLevel: 2 },
+  'e-pattern': { subject: 'english', module: 'patterns', scene: 'meadow', title: '패턴 기차', enOnly: true, titleEn: 'Pattern Train', icon: '🚃', uKey: 'PatternTrain', desc: '기차 칸의 영어 낱말(cat, dog…)을 듣고 읽으며 규칙을 찾아요. 숫자 기차는 영어로 세어요.' },
+  'e-shapes': { subject: 'english', module: 'shapes', scene: 'craft', title: '도형 맞추기', enOnly: true, titleEn: 'Shape Match', icon: '🔷', uKey: 'ShapeMatching', desc: '영어로 도형 이름을 듣고 알맞은 도형을 찾아요.' },
+  'e-shapetrace': { subject: 'english', module: 'trace', opts: { set: 'shapes' }, scene: 'beach', title: '도형 따라그리기', enOnly: true, titleEn: 'Shape Tracing', icon: '🔺', uKey: 'ShapeTracing', desc: '도형을 한 번에 따라 그리며 영어 이름을 들어요.' },
+  'e-clock': { subject: 'english', module: 'clockTrain', scene: 'city', title: '시계 기차', enOnly: true, titleEn: 'Train Time', icon: '⏰', uKey: 'TrainTime', desc: '기차 출발 시각을 보고 시계바늘을 돌려 맞춰요. 시각을 영어로 읽어요.', minLevel: 2 },
   'e-phonics': { subject: 'english', module: 'phonics', title: '보석 캐기', icon: '💎', uKey: 'JewelMiner', desc: '첫소리·끝소리를 듣고 글자 보석을 캐요.' },
   'e-memory': { subject: 'english', module: 'memoryMatch', opts: { set: 'english' }, title: '짝꿍 찾기', icon: '🃏', uKey: 'MemoryMatch', desc: '대문자·소문자, 단어와 그림의 짝을 찾아요.' },
   'e-missing': { subject: 'english', module: 'missingLetter', title: '빠진 알파벳 찾기', icon: '🔤', uKey: 'MissingLetter', desc: '알파벳 순서에서 빠진 글자를 찾아요.' },
@@ -671,7 +671,8 @@ export const PATTERN_SETS = [
   ['☀️', '🌙', '⭐', '☁️'], ['🚗', '🚌', '🚲', '✈️'], ['🌷', '🍀', '🍄', '🌻'],
 ];
 
-/* ---------- 영어 ---------- */
+/* ---------- 영어 ----------
+   enOnly: 수 · 시각 · 도형을 다루는 영어 놀이. 놀이 화면의 제목(titleEn) · 안내 · 소리 · 다독임을 모두 영어로 한다 */
 export const PHONICS = [
   { l: 'a', w: 'apple', e: '🍎' }, { l: 'b', w: 'ball', e: '⚽' }, { l: 'c', w: 'cat', e: '🐱' },
   { l: 'd', w: 'dog', e: '🐶' }, { l: 'f', w: 'fish', e: '🐟' }, { l: 'g', w: 'goat', e: '🐐' },
@@ -1045,7 +1046,7 @@ export const TRACE_SETS = {
   shapes: {
     lang: 'en-US',
     latin: true,
-    prompt: (it) => `${it.say} (${it.ko}) — 초록 점에서 출발해 한 번에 따라 그려요!`,
+    prompt: (it) => `${it.say} — Start at the green dot and draw it in one go!`,
     items: [
       { ch: '●', say: 'circle', ko: '원', min: 1, strokes: [S(oval(50, 50, 34, 34))] },
       { ch: '■', say: 'square', ko: '정사각형', min: 1, strokes: [[[20, 20], [80, 20], [80, 80], [20, 80], [20, 20]]] },

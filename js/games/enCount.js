@@ -90,7 +90,7 @@ export function mount(stage, ctx) {
     });
     cards.replaceChildren(...btns);
     if (ko) ctx.prompt(`${it.e} 몇 개일까요? 하나씩 눌러 세어 보고, 맞는 숫자 카드를 골라요!`, () => en([it.q, '모두 몇 개일까요?']));
-    else ctx.prompt(`${it.e} 몇 개일까요? 하나씩 눌러 영어로 세어 보고, 맞는 숫자 카드를 골라요!`, () => en(`How many ${it.many}?`));
+    else ctx.prompt(`${it.e} How many ${it.many}? Tap and count them, then pick the number card!`, () => en(`How many ${it.many}?`));
   }
 
   round();

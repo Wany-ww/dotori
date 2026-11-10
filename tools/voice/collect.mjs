@@ -109,6 +109,11 @@ for (let hh = 1; hh <= 12; hh++) for (let mm = 0; mm < 60; mm += 5) E.timeEn(hh,
 [3, 4, 5, 6].forEach((k) => addEn(`Find the shape with ${E.numEn(k)} sides!`));
 [['triangle', 3], ['square', 4], ['pentagon', 5], ['hexagon', 6]].forEach(([s, k]) => addEn(`A ${s} has ${E.numEn(k)} sides.`));
 E.TRACE_SETS.shapes.items.forEach((it) => addEn(it.say));
+// 영어 숫자 따라쓰기 5단계: 혼자 쓴 숫자를 판정한 도움말(영어)
+const HW = await import(url('js/handwriting.js'));
+['count-few', 'count-many', 'order', 'direction', 'shape'].forEach((problem) => [0, 1, 2].forEach((want) => addEn(HW.advice({ problem, want }, 'en'))));
+// 영어 패턴 기차: 칸마다 읽어 주는 낱말
+['apple', 'banana', 'grapes', 'lemon', 'dog', 'cat', 'pig', 'bear', 'triangle', 'square', 'star', 'circle', 'sun', 'moon', 'cloud', 'car', 'bus', 'bike', 'plane', 'hat', 'sock', 'shoe', 'cap'].forEach(addEn);
 // ---- 자유 활동: 카드 받는 사람 · 카드 이름 · 글자 색칠 글자 ----
 ['엄마', '아빠', '할머니', '할아버지', '언니', '오빠', '누나', '형', '동생', '친구', '선생님'].forEach((t) => { add(`${t}에게`); add(`${t}에게 하고 싶은 말을 써요!`); });
 ['생일 축하해요', '고마워요', '사랑해요', '힘내요', '미안해요'].forEach(add);

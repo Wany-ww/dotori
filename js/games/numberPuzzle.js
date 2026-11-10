@@ -115,7 +115,7 @@ export function mount(stage, ctx) {
   refill();
   ctx.prompt(
     ko ? (cfg.words ? '숫자 낱말을 읽고, 같은 숫자 홈에 끼워요!' : '숫자 조각을 같은 모양의 홈에 끼우고, 소리 내어 읽어 봐요!')
-      : cfg.words ? '영어 숫자 낱말을 읽고, 같은 숫자 홈에 끼워요!' : '숫자 조각을 같은 모양의 홈에 끼우고, 영어로 읽어 봐요!',
+      : cfg.words ? 'Read the number words and put them in the right places!' : 'Put each number in its place and say it!',
     () => en(ko ? (cfg.words ? '숫자 낱말을 읽고 끼워요!' : '숫자 조각을 같은 모양 홈에 끼워요!') : cfg.words ? 'Read the number words!' : 'Put the numbers in place!'),
   );
 }

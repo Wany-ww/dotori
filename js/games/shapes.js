@@ -114,7 +114,7 @@ export function mount(stage, ctx) {
         },
       }),
     );
-    ctx.prompt(en ? `${spoken} — ${question}` : question, () => (en ? say(spoken) : speak(question)));
+    ctx.prompt(en ? spoken : question, () => (en ? say(spoken) : speak(question)));
   }
 
   round();

@@ -177,7 +177,7 @@ const stepOf = (p) => HANGUL_STEPS[p.hangulStep];
 const unitOf = (p) => EN_UNITS[p.englishUnit];
 const mathOf = (p) => MATH_UNITS[p.mathUnit];
 const stepBadge = (step, extra = '') => h('span', { class: `lv-badge step-badge${extra}` }, `${step.stage}단계 ${step.no}차시`);
-const unitBadge = (unit, extra = '') => h('span', { class: `lv-badge step-badge en-badge${extra}` }, `Level ${unit.code} · ${unit.no}차시`);
+const unitBadge = (unit, extra = '', enOnly = false) => h('span', { class: `lv-badge step-badge en-badge${extra}` }, `Level ${unit.code} · ${enOnly ? `Lesson ${unit.no}` : `${unit.no}차시`}`);
 // 수학 상세 단계는 며칠씩 하므로 몇째 날인지(day, 0부터)도 붙인다
 const mathBadge = (unit, extra = '', day = null) => h('span', { class: `lv-badge step-badge math-badge${extra}` }, `Level ${unit.code} · ${unit.id}${day == null ? '' : ` · ${day + 1}/${unit.days}일`}`);
 const subjectBadge = (sub, p, extra = '') => (sub.id === 'hangul' ? stepBadge(stepOf(p), extra) : sub.id === 'english' ? unitBadge(unitOf(p), extra) : mathBadge(mathOf(p), extra, p.mathDay));
@@ -804,22 +804,24 @@ function viewPlay(key, params) {
   const level = lvParam >= 1 && lvParam <= MAX_LEVEL ? lvParam : fixed ? (tune ? tune.lv : fixed.level) : p.levels[g.subject];
   const challenge = !fixed && !inCourse && params.get('ch') === '1' && level > p.levels[g.subject];
   const opts = { ...(g.opts || {}), ...(tune?.opts || {}), ...(tune?.cfg ? { cfg: tune.cfg } : {}) };
-  const title = opts.title || g.title;
+  const title = opts.title || (g.enOnly ? g.titleEn : g.title);
   const mode = { inCourse, step, challenge, level, chal, startedAt: Date.now() };
 
   const dots = h('div', { class: 'dots', 'aria-hidden': 'true' });
   const promptText = h('p', { class: 'prompt-text', 'aria-live': 'polite' });
   const stage = h('div', { class: 'stage' });
   let replay = () => {};
-  const chipText = inCourse ? `${sub.courseName} ${step + 1}/${course.length} · ${course[step].stage}` : chal ? `🗺️ ${chal.stage}단계` : challenge ? '⬆ 도전 모드' : '추가 학습';
-  const root = h('div', { class: 'player', 'data-subject': g.subject, 'data-scene': g.scene },
+  const chipText = g.enOnly
+    ? (inCourse ? `Today ${step + 1}/${course.length}` : chal ? `🗺️ Stage ${chal.stage}` : challenge ? '⬆ Challenge' : 'Practice')
+    : inCourse ? `${sub.courseName} ${step + 1}/${course.length} · ${course[step].stage}` : chal ? `🗺️ ${chal.stage}단계` : challenge ? '⬆ 도전 모드' : '추가 학습';
+  const root = h('div', { class: 'player', 'data-subject': g.subject, 'data-scene': g.scene, 'data-lang': g.enOnly ? 'en' : null },
     h('header', { class: 'player-bar' },
       h('a', { class: 'icon-btn', href: inCourse ? `#/s/${g.subject}` : chal ? `#/challenge/${chal.kind}` : `#/extra/${g.subject}`, 'aria-label': '그만하고 나가기' }, '✕'),
       h('div', { class: 'player-title' },
         h('span', { class: 'player-icon', 'aria-hidden': 'true' }, g.icon),
         h('span', {}, title),
         h('span', { class: `chip${challenge ? ' chip-challenge' : ''}` }, chipText),
-        hangul ? stepBadge(stepOf(p)) : english ? unitBadge(chal ? EN_UNITS[unit.index] : unitOf(p)) : math ? mathBadge(mUnit, '', mUnit === mathOf(p) ? p.mathDay : null) : lvBadge(level)),
+        hangul ? stepBadge(stepOf(p)) : english ? unitBadge(chal ? EN_UNITS[unit.index] : unitOf(p), '', g.enOnly) : math ? mathBadge(mUnit, '', mUnit === mathOf(p) ? p.mathDay : null) : lvBadge(level)),
       dots),
     h('div', { class: 'prompt-row' },
       h('button', { class: 'speaker-btn', 'aria-label': '다시 듣기', onclick: () => { sfx.tap(); replay(); } }, '🔊'),
@@ -912,18 +914,22 @@ function showReward(root, key, res, { inCourse, step, challenge, level, chal, st
   const nextIdx = p.progress[g.subject];
   const hasNext = inCourse && nextIdx < course.length;
   const curLv = p.levels[g.subject];
-  const title = check ? (check.pass ? '확인 퀴즈 통과!' : '확인 퀴즈 끝!') : stage ? (stage.pass ? `${chal.stage}단계 통과!` : '조금만 더 해 볼까요?') : levelUp ? '레벨 업!' : courseFinished ? `${sub.courseName} 완료!` : stars === 3 ? '참 잘했어요!' : stars === 2 ? '멋지게 해냈어요!' : '끝까지 해냈어요!';
+  // 영어로만 하는 놀이(enOnly): 끝 화면의 제목 · 단추 · 말도 영어로
+  const E = Boolean(g.enOnly);
+  const title = E
+    ? (stage ? (stage.pass ? `Stage ${chal.stage} clear!` : 'Try again!') : courseFinished ? 'You did it!' : stars === 3 ? 'Great job!' : stars === 2 ? 'Well done!' : 'Good job!')
+    : check ? (check.pass ? '확인 퀴즈 통과!' : '확인 퀴즈 끝!') : stage ? (stage.pass ? `${chal.stage}단계 통과!` : '조금만 더 해 볼까요?') : levelUp ? '레벨 업!' : courseFinished ? `${sub.courseName} 완료!` : stars === 3 ? '참 잘했어요!' : stars === 2 ? '멋지게 해냈어요!' : '끝까지 해냈어요!';
 
   const actions = [];
-  if (stage) actions.push(h('a', { class: 'btn', href: `#/challenge/${chal.kind}` }, stage.opened ? `🗺️ ${chal.stage + 1}단계로 가기` : '🗺️ 지도로 돌아가기'));
-  else if (hasNext) actions.push(h('a', { class: 'btn', href: `#/play/${course[nextIdx].key}?step=${nextIdx}` }, `다음 활동 ▶ (${nextIdx + 1}/${course.length})`));
-  else if (inCourse) actions.push(h('a', { class: 'btn', href: `#/extra/${g.subject}` }, '🎮 추가 학습 하러 가기'));
-  else if (challenge && !levelUp) actions.push(h('a', { class: 'btn btn-sun', href: `#/play/${key}?lv=${level}&ch=1&again=${Date.now()}` }, '🔁 다시 도전'));
-  else actions.push(h('a', { class: 'btn', href: `#/play/${key}?again=${Date.now()}` }, '🔁 한 번 더!'));
+  if (stage) actions.push(h('a', { class: 'btn', href: `#/challenge/${chal.kind}` }, E ? (stage.opened ? `🗺️ Go to stage ${chal.stage + 1}` : '🗺️ Back to the map') : stage.opened ? `🗺️ ${chal.stage + 1}단계로 가기` : '🗺️ 지도로 돌아가기'));
+  else if (hasNext) actions.push(h('a', { class: 'btn', href: `#/play/${course[nextIdx].key}?step=${nextIdx}` }, E ? `Next ▶ (${nextIdx + 1}/${course.length})` : `다음 활동 ▶ (${nextIdx + 1}/${course.length})`));
+  else if (inCourse) actions.push(h('a', { class: 'btn', href: `#/extra/${g.subject}` }, E ? '🎮 More games' : '🎮 추가 학습 하러 가기'));
+  else if (challenge && !levelUp) actions.push(h('a', { class: 'btn btn-sun', href: `#/play/${key}?lv=${level}&ch=1&again=${Date.now()}` }, E ? '🔁 Try again' : '🔁 다시 도전'));
+  else actions.push(h('a', { class: 'btn', href: `#/play/${key}?again=${Date.now()}` }, E ? '🔁 One more!' : '🔁 한 번 더!'));
   if (!curriculum(g.subject) && !inCourse && !challenge && curLv < MAX_LEVEL) {
     actions.push(h('a', { class: 'btn btn-sun', href: `#/play/${key}?lv=${curLv + 1}&ch=1` }, `⬆ Lv.${curLv + 1} 도전`));
   }
-  if (!stage) actions.push(h('a', { class: 'btn btn-ghost', href: inCourse ? `#/s/${g.subject}` : `#/extra/${g.subject}` }, inCourse ? '수업 지도' : '목록으로'));
+  if (!stage) actions.push(h('a', { class: 'btn btn-ghost', href: inCourse ? `#/s/${g.subject}` : `#/extra/${g.subject}` }, E ? (inCourse ? 'Lesson map' : 'All games') : inCourse ? '수업 지도' : '목록으로'));
 
   const overlay = h('div', { class: 'reward', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
     h('div', { class: 'reward-card' },
@@ -954,8 +960,8 @@ function showReward(root, key, res, { inCourse, step, challenge, level, chal, st
           stage.gift ? h('span', {}, `🎁 ${chal.stage}단계 선물! 친구가 스티커를 줬어요.`) : null)
         : null,
       h('div', { class: 'reward-acorns' }, acornImg(34), '+', h('b', { class: 'acorn-count' }, '0')),
-      sticker ? h('div', { class: 'reward-sticker' }, h('span', { class: 'sticker-big' }, stickerPic(sticker)), '새 스티커를 받았어요!') : null,
-      courseFinished ? h('p', { class: 'muted' }, '오늘의 도토리나무가 한 뼘 자랐어요 🌱') : null,
+      sticker ? h('div', { class: 'reward-sticker' }, h('span', { class: 'sticker-big' }, stickerPic(sticker)), E ? 'You got a new sticker!' : '새 스티커를 받았어요!') : null,
+      courseFinished ? h('p', { class: 'muted' }, E ? 'Your acorn tree grew today! 🌱' : '오늘의 도토리나무가 한 뼘 자랐어요 🌱') : null,
       courseFinished && g.subject === 'hangul' && p.hangulReview != null
         ? h('p', { class: 'next-lesson' }, `내일은 ${HANGUL_STEPS[p.hangulReview].id}차시를 복습해요!`)
         : courseFinished && g.subject === 'hangul' && p.hangulStep < HANGUL_STEPS.length - 1
@@ -967,7 +973,8 @@ function showReward(root, key, res, { inCourse, step, challenge, level, chal, st
           ? `내일부터 Level ${MATH_UNITS[p.mathUnit + 1].code}! ${MATH_UNITS[p.mathUnit + 1].title}을(를) 배워요.`
           : `내일은 ${MATH_UNITS[p.mathUnit + 1].id} ${MATH_UNITS[p.mathUnit + 1].title}을(를) 배워요!`) : null,
       courseFinished && g.subject === 'english' && p.englishUnit < EN_UNITS.length - 1
-        ? h('p', { class: 'next-lesson' }, EN_UNITS[p.englishUnit + 1].code !== unitOf(p).code
+        ? h('p', { class: 'next-lesson' }, E ? `Tomorrow: Level ${EN_UNITS[p.englishUnit + 1].code} · Lesson ${EN_UNITS[p.englishUnit + 1].no}!`
+          : EN_UNITS[p.englishUnit + 1].code !== unitOf(p).code
           ? `내일부터 Level ${EN_UNITS[p.englishUnit + 1].code}! ${EN_UNITS[p.englishUnit + 1].levelTitle}을(를) 배워요.`
           : `내일은 Level ${unitOf(p).code} ${unitOf(p).no + 1}차시를 배워요!`) : null,
       h('div', { class: 'reward-actions' }, actions)));
@@ -989,7 +996,8 @@ function showReward(root, key, res, { inCourse, step, challenge, level, chal, st
   }
   const counter = overlay.querySelector('.acorn-count');
   for (let i = 1; i <= acorns; i++) setTimeout(() => { counter.textContent = String(i); if (i === acorns) counter.parentElement.classList.add('pop'); }, reduce ? 0 : 500 + i * 70);
-  speak(check
+  if (E) speak(title, 'en-US');
+  else speak(check
     ? (check.pass ? '확인 퀴즈 통과! 정말 잘 기억하고 있어요!' : '확인 퀴즈를 끝까지 풀었어요! 내일 한 번 더 연습해 봐요.')
     : levelUp ? `우와, 레벨 업! 이제 ${sub.name} ${levelUp}단계예요!`
     : courseFinished ? '오늘 수업을 모두 마쳤어요! 정말 대단해요!' : title);

@@ -102,7 +102,10 @@ const PRAISE = {
   ko: ['잘했어요!', '최고예요!', '멋져요!', '정답이에요!', '우와, 대단해요!'],
   en: ['Great job!', 'Awesome!', 'Well done!', 'You got it!'],
 };
-const CHEER_UP = ['괜찮아, 다시 해 보자!', '천천히 해도 돼요!', '거의 다 왔어요!'];
+const CHEER_UP = {
+  ko: ['괜찮아, 다시 해 보자!', '천천히 해도 돼요!', '거의 다 왔어요!'],
+  en: ['Try again!', 'Take your time!', 'Almost there!'],
+};
 
 // 토리가 화면 아래에서 고개를 내밀고 한마디 한다
 function peek(text, soft) {
@@ -117,7 +120,8 @@ export function cheer(el, lang = 'ko') {
   burst(el);
   peek(pick(PRAISE[lang] || PRAISE.ko), false);
 }
-export const encourage = () => peek(pick(CHEER_UP), true);
+// 영어로만 하는 놀이(놀이 화면에 data-lang="en")에서는 영어로 다독인다
+export const encourage = () => peek(pick(CHEER_UP[document.querySelector('.player[data-lang="en"]') ? 'en' : 'ko']), true);
 
 // 무벌점 원칙 + 단계적 힌트: 1회 오답 소리, 2회 정답 반짝임, 3회 가이드 손가락
 export function makeHinter() {

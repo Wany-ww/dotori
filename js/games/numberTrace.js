@@ -48,7 +48,7 @@ const SET = {
   latin: true,
   lines: true,
   cls: 'numtrace',
-  prompt: (it) => `${it.ch} (${it.say}) — 노란 점에서 출발해 화살표 방향으로 따라 써요!`,
+  prompt: (it) => `${it.ch} (${it.say}) — Start at the yellow dot and follow the arrows!`,
   side: dots,
 };
 
@@ -72,9 +72,9 @@ export function mount(stage, ctx) {
   const card = h('div', { class: 'nt-card' });
   const row = h('div', { class: 'nt-pad' });
   const tip = h('p', { class: 'hw-tip', 'aria-live': 'polite' });
-  const undo = h('button', { class: 'btn btn-ghost hw-tool', type: 'button' }, '↩ 한 획 지우기');
-  const how = h('button', { class: 'btn btn-ghost hw-tool', type: 'button' }, '👀 쓰는 순서 보기');
-  const skip = h('button', { class: 'btn btn-ghost hw-tool', type: 'button', hidden: true }, '다음으로 ▶');
+  const undo = h('button', { class: 'btn btn-ghost hw-tool', type: 'button' }, ko ? '↩ 한 획 지우기' : '↩ Undo');
+  const how = h('button', { class: 'btn btn-ghost hw-tool', type: 'button' }, ko ? '👀 쓰는 순서 보기' : '👀 Show me how');
+  const skip = h('button', { class: 'btn btn-ghost hw-tool', type: 'button', hidden: true }, ko ? '다음으로 ▶' : 'Next ▶');
   stage.append(h('div', { class: 'numwrite' }, card, row, tip, h('div', { class: 'hw-tools' }, undo, how, skip)));
   let n = 0;
   let firstTry = 0;
@@ -115,15 +115,15 @@ export function mount(stage, ctx) {
         }
         misses++;
         sfx.wrong();
-        const t = advice(r);
+        const t = advice(r, ctx.lang);
         tip.textContent = t;
-        speak(t);
+        en(t);
         if (p.fails >= 3) skip.hidden = false;
       },
     });
     skip.onclick = () => { sfx.tap(); skip.hidden = true; pad.give(); say(); next(false); };
     row.replaceChildren(pad.el);
-    ctx.prompt(ko ? '들려주는 숫자를 잘 듣고, 칸에 바른 순서로 써 봐요!' : '영어로 들려주는 숫자를 잘 듣고, 칸에 바른 순서로 써 봐요!', say);
+    ctx.prompt(ko ? '들려주는 숫자를 잘 듣고, 칸에 바른 순서로 써 봐요!' : 'Listen to the number and write it in the box!', say);
   }
   round();
 }

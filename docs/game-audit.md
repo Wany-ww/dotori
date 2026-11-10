@@ -197,6 +197,8 @@
 
 ## 영어 (69종)
 
+수 · 시각 · 도형을 다루는 영어 놀이 9종(`e-count` · `e-numpuz` · `e-numtrace` · `e-days` · `e-matrix` · `e-pattern` · `e-shapes` · `e-shapetrace` · `e-clock`)은 수학 놀이처럼 보이지 않게 **영어로만** 해요(2026-11-11). 놀이 화면 제목(How Many? · Train Time …) · 안내 글 · 읽어 주는 말 · 다독임 말풍선 · 끝 화면(Great job! · One more!)이 모두 영어예요(`data.js`의 `enOnly` · `titleEn`). 같은 모듈을 쓰는 수학판은 그대로 한국어예요.
+
 | # | 식별자 | 이름 | 상태 | 우리 게임 | 메모 / 막는 기술 |
 |---|---|---|---|---|---|
 | 1 | `AlphabetPuzzle` | 알파벳 퍼즐 | ✅ | `e-abc` | 나무 알파벳 판의 빈 자리에 글자 조각 끼우기 (참고 영상 기준), Lv3·5 소문자, Lv4~5 모양 홈 없이 알파벳 순서로 |

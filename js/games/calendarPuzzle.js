@@ -168,7 +168,8 @@ export function mount(stage, ctx) {
     }));
     board.replaceChildren(...items.map((it) => slot(it.key, {}, cfg.label ? h('span', { class: 'cp-ghost' }, it.say) : null)));
     queue = shuffle(items);
-    ctx.prompt(cfg.label ? '요일 이름을 보고, 그림 조각을 제자리에 끼워 그림을 완성해요!' : `${DAYS[0]}부터 ${DAYS[6]}까지, 요일 순서대로 그림 조각을 끼워요!`,
+    ctx.prompt(ko ? (cfg.label ? '요일 이름을 보고, 그림 조각을 제자리에 끼워 그림을 완성해요!' : `${DAYS[0]}부터 ${DAYS[6]}까지, 요일 순서대로 그림 조각을 끼워요!`)
+      : cfg.label ? 'Read the day names and put the picture pieces in place!' : `Put the picture pieces in order, from ${DAYS[0]} to ${DAYS[6]}!`,
       () => en(ko ? '요일을 차례대로 끼워요!' : "Let's put the days of the week in order!"));
   } else if (cfg.mode === 'months') {
     title.textContent = ko ? '열두 달' : 'Months of the year';
@@ -186,7 +187,7 @@ export function mount(stage, ctx) {
       return s;
     }));
     queue = shuffle(items.filter((_, i) => !given.has(i)));
-    ctx.prompt(`${MONTHS[0]}부터 ${MONTHS[11]}까지, 달 카드를 순서대로 끼워요!`, () => en(ko ? '1월부터 12월까지 차례대로 끼워요!' : "Let's put the months in order!"));
+    ctx.prompt(ko ? `${MONTHS[0]}부터 ${MONTHS[11]}까지, 달 카드를 순서대로 끼워요!` : `Put the month cards in order, from ${MONTHS[0]} to ${MONTHS[11]}!`, () => en(ko ? '1월부터 12월까지 차례대로 끼워요!' : "Let's put the months in order!"));
   } else {
     month = randInt(0, 11);
     const year = new Date().getFullYear();
@@ -218,7 +219,7 @@ export function mount(stage, ctx) {
       }),
     );
     queue = shuffle([...holes].map(tile));
-    ctx.prompt('달력에서 빠진 날짜를 찾아, 숫자 조각을 제자리에 끼워요!', () => en(ko ? `${KO_MONTHS[month]} 달력의 빠진 날짜를 찾아요!` : [EN_MONTHS[month], 'Find the missing dates!']));
+    ctx.prompt(ko ? '달력에서 빠진 날짜를 찾아, 숫자 조각을 제자리에 끼워요!' : 'Find the missing dates and put the number pieces in place!', () => en(ko ? `${KO_MONTHS[month]} 달력의 빠진 날짜를 찾아요!` : [EN_MONTHS[month], 'Find the missing dates!']));
   }
   total = queue.length;
   ctx.progress(0, total);

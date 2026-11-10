@@ -100,8 +100,8 @@ export function mount(stage, ctx) {
       }),
     );
     ctx.prompt(
-      r.numeric ? '숫자 기차예요! 얼마씩 커지는지 찾아서 다음 수를 골라요.'
-        : words ? '기차 칸의 영어 낱말을 들으며 규칙을 찾아요. 물음표 칸에 올 것을 골라요!' : '패턴 기차의 규칙을 찾아서, 물음표 칸에 올 것을 골라요!',
+      en ? (r.numeric ? 'Number train! Find the rule and pick the next number.' : 'Find the pattern! What comes next?')
+        : r.numeric ? '숫자 기차예요! 얼마씩 커지는지 찾아서 다음 수를 골라요.' : '패턴 기차의 규칙을 찾아서, 물음표 칸에 올 것을 골라요!',
       () => (en ? sayRow(false)
         : speak(r.numeric ? `${r.shown.join(', ')}, 다음은?` : '다음에 올 것은 무엇일까요?')),
     );
