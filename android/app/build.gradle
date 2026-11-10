@@ -6,6 +6,8 @@ plugins {
 def appVersion = (project.findProperty('versionCode') ?: '1') as int
 // 서명 키: CI에서는 저장소 Secrets로 만든 파일(ANDROID_KEYSTORE_FILE), 직접 빌드할 때는 android/release.keystore
 def keystoreFile = System.getenv('ANDROID_KEYSTORE_FILE') ?: rootProject.file('release.keystore').path
+// 앱에 넣는 서버 주소: 켜면 이 주소로 바로 연결한다. 다른 주소로 빌드하려면 -PserverUrl=https://… (CI는 저장소 변수 DOTORI_SERVER)
+def serverUrl = (project.findProperty('serverUrl') ?: 'https://dotori.tailf5847f.ts.net').toString().replaceAll('/+$', '')
 
 android {
     namespace 'kr.dotori.forest'
@@ -19,6 +21,7 @@ android {
         versionName "1.${appVersion}"
         // 앱이 새 버전을 확인하는 GitHub 저장소 (Releases)
         buildConfigField 'String', 'UPDATE_REPO', '"Wany-ww/dotori"'
+        buildConfigField 'String', 'SERVER', "\"${serverUrl}\""
     }
 
     buildFeatures {

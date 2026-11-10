@@ -58,7 +58,8 @@ jobs:
           # 버전 번호는 실행 번호로 늘 커진다 (직접 빌드한 앱은 1)
           VERSION=$((GITHUB_RUN_NUMBER + 1))
           if [ "${{ steps.key.outputs.signed }}" = "true" ]; then TASK=assembleRelease; else TASK=assembleDebug; fi
-          ./gradlew "$TASK" -PversionCode="$VERSION" --no-daemon --console=plain
+          # 앱에 넣는 서버 주소: 저장소 변수(Variables) DOTORI_SERVER가 있으면 그것, 없으면 app/build.gradle의 기본 주소
+          ./gradlew "$TASK" -PversionCode="$VERSION" -PserverUrl="${{ vars.DOTORI_SERVER }}" --no-daemon --console=plain
           mkdir -p ../dist
           cp app/build/outputs/apk/*/app-*.apk "../dist/dotori-1.$VERSION.apk"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"

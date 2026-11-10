@@ -42,14 +42,16 @@ import java.util.Locale;
 
 /**
  * 도토리숲 앱: NAS에서 돌아가는 도토리숲 서버를 웹뷰로 연다.
- * - 처음 켜면 서버 주소를 묻고(assets/setup.html), /api/ping으로 도토리숲 서버인지 확인한 뒤 저장한다.
+ * - 켜면 앱에 넣어 둔 서버 주소(BuildConfig.SERVER)로 바로 연결한다. 연결하지 못하면 다시 시도 화면(assets/setup.html)을 보여 주고,
+ *   거기서 다른 주소를 적으면 /api/ping으로 도토리숲 서버인지 확인한 뒤 저장한다(기본 주소로 되돌릴 수 있음).
  * - 웹뷰에 없는 음성인식 · 음성 합성은 안드로이드 기능으로 대신하고, 웹 쪽(js/nativeBridge.js)에 DotoriNative로 넘겨준다.
  * - 서버 밖의 주소는 웹뷰에서 열지 않고 브라우저로 넘긴다.
  * - 앱 자체의 새 버전은 GitHub Releases(app-<번호>)에서 확인해서, 받으면 설치 화면을 연다. 놀이 화면은 서버가 늘 새로 준다.
  */
 public class MainActivity extends Activity {
     private static final String PREFS = "dotori";
-    private static final String KEY_SERVER = "server";
+    // 직접 적은 서버 주소 (없으면 앱에 넣어 둔 주소). 예전 버전이 쓰던 "server"는 읽지 않아서, 업데이트하면 넣어 둔 주소로 바뀐다
+    private static final String KEY_SERVER = "customServer";
     private static final String SETUP = "file:///android_asset/setup.html";
     private static final int ASK_MIC = 1;
     private static final String APK = "application/vnd.android.package-archive";
@@ -102,17 +104,13 @@ public class MainActivity extends Activity {
     }
 
     private SharedPreferences prefs() { return getSharedPreferences(PREFS, MODE_PRIVATE); }
-    private String server() { return prefs().getString(KEY_SERVER, null); }
+    private String server() { return prefs().getString(KEY_SERVER, BuildConfig.SERVER); }
     private boolean hasMic() { return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED; }
 
-    private void open() {
-        String server = server();
-        web.loadUrl(server == null ? SETUP : server + "/");
-    }
+    private void open() { web.loadUrl(server() + "/"); }
 
     private void showSetup(String error) {
-        String server = server();
-        String q = "?server=" + Uri.encode(server == null ? "" : server) + (error == null ? "" : "&error=" + Uri.encode(error));
+        String q = "?server=" + Uri.encode(server()) + "&default=" + Uri.encode(BuildConfig.SERVER) + (error == null ? "" : "&error=" + Uri.encode(error));
         web.loadUrl(SETUP + q);
     }
 
@@ -130,9 +128,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean inServer(Uri uri) {
-        String server = server();
-        if (server == null) return false;
-        Uri s = Uri.parse(server);
+        Uri s = Uri.parse(server());
         return s.getScheme() != null && s.getScheme().equals(uri.getScheme())
             && s.getHost() != null && s.getHost().equalsIgnoreCase(uri.getHost())
             && s.getPort() == uri.getPort();
@@ -156,10 +152,7 @@ public class MainActivity extends Activity {
     /** 웹(js/nativeBridge.js · assets/setup.html)에서 부르는 기능. 웹뷰의 별도 스레드에서 불린다. */
     private class Bridge {
         @JavascriptInterface
-        public String getServer() {
-            String s = server();
-            return s == null ? "" : s;
-        }
+        public String getServer() { return server(); }
 
         // 서버 주소 확인: /api/ping이 도토리숲 서버면 저장하고 연다. 결과는 setup.html의 onCheck(ok, 주소, 이유)로
         @JavascriptInterface
@@ -190,7 +183,8 @@ public class MainActivity extends Activity {
                 final String reason = why;
                 main.post(() -> {
                     if (reason == null) {
-                        prefs().edit().putString(KEY_SERVER, url).apply();
+                        if (url.equals(BuildConfig.SERVER)) prefs().edit().remove(KEY_SERVER).apply();
+                        else prefs().edit().putString(KEY_SERVER, url).apply();
                         open();
                     } else {
                         js("window.onCheck&&onCheck(false," + JSONObject.quote(url) + "," + JSONObject.quote(reason) + ")");
@@ -204,6 +198,15 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void changeServer() { main.post(() -> showSetup(null)); }
+
+        // 직접 적은 주소를 지우고 앱에 넣어 둔 주소로 연다
+        @JavascriptInterface
+        public void resetServer() {
+            main.post(() -> {
+                prefs().edit().remove(KEY_SERVER).apply();
+                open();
+            });
+        }
 
         // 음성 합성 (녹음이 없는 말)
         @JavascriptInterface

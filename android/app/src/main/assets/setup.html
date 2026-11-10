@@ -28,18 +28,20 @@
 <body>
 <main>
   <div class="logo" aria-hidden="true">🌰</div>
-  <h1 id="title">도토리숲 서버 연결</h1>
-  <p id="lead">집에 있는 NAS의 도토리숲 서버 주소를 적어 주세요. 한 번만 적으면 다음부터는 바로 열려요.</p>
+  <h1 id="title">도토리숲 서버 주소</h1>
+  <p id="lead">앱은 원래 정해진 도토리숲 서버로 바로 연결돼요. 다른 서버를 쓸 때만 주소를 적어 주세요.</p>
   <div id="offline" hidden>
     <button id="retry" type="button">다시 시도</button>
+    <button id="other" class="ghost" type="button">다른 서버 주소 적기</button>
   </div>
+  <button id="reset" class="ghost" type="button" hidden>기본 서버로 되돌리기</button>
   <form id="form">
     <label for="url">서버 주소</label>
     <input id="url" type="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="https://dotori.tail1234.ts.net">
     <button id="go" type="submit">연결하기</button>
   </form>
   <div class="msg" id="msg" role="status" aria-live="polite"></div>
-  <p class="hint">https://dotori.<i>tailnet 이름</i>.ts.net 주소를 적으면 집 와이파이 · 데이터 어디서나 열려요. 집 와이파이 안에서만 쓸 때는 http://192.168.0.10:5173 처럼 NAS의 내부 주소도 돼요.</p>
+  <p class="hint" id="hint">기본 서버: <b id="def"></b><br>집 와이파이 안에서만 쓸 때는 http://192.168.0.10:5173 처럼 NAS의 내부 주소도 돼요.</p>
 </main>
 <script>
   const q = new URLSearchParams(location.search);
@@ -50,13 +52,23 @@
     ssl: '보안 인증서(HTTPS)를 확인할 수 없어요. NAS의 인증서 설정을 확인하거나, 집 안에서는 http:// 내부 주소로 해 보세요.',
     notdotori: '이 주소에서 도토리숲 서버를 찾지 못했어요. 주소와 포트를 확인해 주세요.',
   };
-  $('url').value = q.get('server') || '';
-  if (q.get('error') === 'offline' && q.get('server')) {
+  const server = q.get('server') || '';
+  const def = q.get('default') || '';
+  $('url').value = server;
+  $('def').textContent = def;
+  // 직접 적은 주소를 쓰고 있을 때만 되돌리기 버튼
+  $('reset').hidden = !def || server === def;
+  if (q.get('error') === 'offline') {
+    // 연결이 끊겼을 때는 다시 시도가 먼저, 주소 적기는 눌러야 보인다
     $('title').textContent = '서버에 연결하지 못했어요';
-    $('lead').textContent = '인터넷 연결이나 NAS가 꺼져 있는지 확인한 뒤 다시 시도해 주세요. 주소가 바뀌었으면 아래에서 고쳐요.';
+    $('lead').textContent = '인터넷 연결을 확인하거나, 집의 NAS가 켜져 있는지 확인한 뒤 다시 시도해 주세요.';
     $('offline').hidden = false;
+    $('form').hidden = true;
+    $('hint').hidden = true;
   }
+  $('other').addEventListener('click', () => { $('other').hidden = true; $('form').hidden = false; $('hint').hidden = false; $('url').focus(); });
   $('retry').addEventListener('click', () => { msg('다시 연결하고 있어요…', 'wait'); window.DotoriNative.retry(); });
+  $('reset').addEventListener('click', () => { msg('기본 서버로 연결하고 있어요…', 'wait'); window.DotoriNative.resetServer(); });
   $('form').addEventListener('submit', (e) => {
     e.preventDefault();
     const v = $('url').value.trim();
