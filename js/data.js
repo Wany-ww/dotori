@@ -286,7 +286,7 @@ export const GAMES = {
   'e-wmatrix': { subject: 'english', module: 'matrix', opts: { kind: 'word' }, scene: 'wood', title: '단어 매트릭스', icon: '🔡', uKey: 'WordMatrix', desc: '첫소리와 끝소리가 만나는 칸에 두 조각을 이은 단어를 끼워요.' },
   'e-space': { subject: 'english', module: 'spaceRepair', scene: 'space', title: '우주 정비소', icon: '🛸', uKey: 'SpaceRepairShop', desc: '고장 난 우주선 화면의 그림에 맞는 단어 부품을 끌어 올려 고쳐 줘요.' },
   'e-jelly': { subject: 'english', module: 'jellyAffix', scene: 'pond', title: '젤리 붙이기', icon: '🍬', uKey: 'JellyAffix', desc: '단어 젤리 끝에 -s, -es, -en 같은 젤리를 붙여 문장을 완성해요.', minLevel: 2 },
-  'e-pattern': { subject: 'english', module: 'patterns', scene: 'meadow', title: '패턴 기차', icon: '🚃', uKey: 'PatternTrain', desc: '패턴 기차의 규칙을 찾아요. 숫자 기차는 영어로 세어요.' },
+  'e-pattern': { subject: 'english', module: 'patterns', scene: 'meadow', title: '패턴 기차', icon: '🚃', uKey: 'PatternTrain', desc: '기차 칸의 영어 낱말(cat, dog…)을 듣고 읽으며 규칙을 찾아요. 숫자 기차는 영어로 세어요.' },
   'e-shapes': { subject: 'english', module: 'shapes', scene: 'craft', title: '도형 맞추기', icon: '🔷', uKey: 'ShapeMatching', desc: '영어로 도형 이름을 듣고 알맞은 도형을 찾아요.' },
   'e-shapetrace': { subject: 'english', module: 'trace', opts: { set: 'shapes' }, scene: 'beach', title: '도형 따라그리기', icon: '🔺', uKey: 'ShapeTracing', desc: '도형을 한 번에 따라 그리며 영어 이름을 들어요.' },
   'e-clock': { subject: 'english', module: 'clockTrain', scene: 'city', title: '시계 기차', icon: '⏰', uKey: 'TrainTime', desc: '기차 출발 시각을 보고 시계바늘을 돌려 맞춰요. 시각을 영어로 읽어요.', minLevel: 2 },

@@ -10,7 +10,7 @@ import { MATH_LEVELS, MATH_UNITS, mathTune, startMathUnitForAge } from './mathCu
 import { viewFree, viewFreeAct, viewAlbum, viewWork } from './freeViews.js';
 import { album } from './album.js';
 import { sync } from './sync.js';
-import { viewAccount, viewSignup, accountBar, viewAdmin, viewAdminUser, viewAdminReport } from './accountViews.js';
+import { viewAccount, viewSignup, accountBar, viewAdmin, viewAdminUser, viewAdminReport, logout, versionLine } from './accountViews.js';
 import { viewReport } from './report.js';
 import { viewChallenge, viewChallenges, CHALLENGES, STAGES, kindOfGame, stageUnitIndex } from './challengeMap.js';
 import * as trace from './games/trace.js';
@@ -242,7 +242,8 @@ function viewLogin() {
         h('span', { class: 'profile-name' }, '새 친구 등록'))),
     h('p', { class: 'privacy-note' }, sync.user
       ? '🔒 아이 정보와 학습 기록은 보호자 계정에 저장돼요. 다른 기기에서 로그인해도 이어서 할 수 있어요.'
-      : '🔒 아이 정보와 학습 기록은 이 기기의 브라우저에만 저장되고 서버로 보내지 않아요.'));
+      : '🔒 아이 정보와 학습 기록은 이 기기의 브라우저에만 저장되고 서버로 보내지 않아요.'),
+    versionLine());
 }
 
 function viewJoin(edit) {
@@ -339,11 +340,15 @@ function viewProfile() {
     window.DotoriNative ? h('section', { class: 'panel' },
       h('div', { class: 'panel-head' }, h('h2', {}, '앱 설정'), h('span', { class: 'chip' }, '부모님용')),
       h('p', { class: 'muted' }, `지금 연결한 서버: ${window.DotoriNative.getServer()}`),
-      typeof window.DotoriNative.appVersion === 'function' ? h('p', { class: 'muted' }, `앱 버전: ${window.DotoriNative.appVersion()}`) : null,
       h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => window.DotoriNative.changeServer() }, '🔌 서버 주소 바꾸기'),
       typeof window.DotoriNative.checkUpdate === 'function'
         ? h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => window.DotoriNative.checkUpdate() }, '🔄 앱 업데이트 확인')
         : null) : null,
+    // 서버 계정 모드: 보호자 계정 · 로그아웃
+    sync.user ? h('section', { class: 'panel' },
+      h('div', { class: 'panel-head' }, h('h2', {}, '보호자 계정'), h('span', { class: 'chip' }, '부모님용')),
+      h('p', { class: 'muted' }, `👤 ${sync.user.name} (${sync.user.username})로 로그인했어요.`),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: logout }, '🚪 로그아웃')) : null,
     h('section', { class: 'panel danger-zone' },
       h('h2', {}, '프로필 삭제'),
       h('p', { class: 'muted' }, '이 친구의 학습 기록, 도토리, 스티커, 앨범 작품이 모두 지워지고 되돌릴 수 없어요.'),
@@ -356,7 +361,8 @@ function viewProfile() {
           store.removeProfile(p.id);
           go('#/login');
         },
-      }, `${p.name} 프로필 삭제`)));
+      }, `${p.name} 프로필 삭제`)),
+    versionLine());
 }
 
 // 한글: 단계·차시를 직접 고른다 (하루에 한 차시씩 저절로 나아간다)

@@ -58,6 +58,18 @@ const clientIp = (req) => (req.headers['x-forwarded-for'] || '').split(',')[0].t
 // HTTPS로 들어온 요청(NAS 역방향 프록시 뒤 포함)이면 쿠키에 Secure를 붙인다
 const secure = (req) => req.socket.encrypted || String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
 const sessionCookie = (req, token, maxAge) => `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure(req) ? '; Secure' : ''}`;
+// 지금 내보내는 화면 파일의 커밋 (실행기가 서버를 끄지 않고 파일만 바꿀 때도 있어서, 1분마다 다시 본다)
+let versionCache = { at: 0, value: null };
+function version() {
+  if (Date.now() - versionCache.at < 60000) return versionCache.value;
+  let value = null;
+  try {
+    const [commit, date] = require('child_process').execFileSync('git', ['-C', root, 'log', '-1', '--format=%h %cI'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 3000 }).trim().split(' ');
+    value = { commit, date };
+  } catch {}
+  versionCache = { at: Date.now(), value };
+  return value;
+}
 const publicUser = (u) => u && { id: u.id, username: u.username, name: u.name, role: u.role, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt };
 
 // 로그인 실패가 잦은 IP는 잠깐 막는다 (10분에 10번)
@@ -123,7 +135,7 @@ async function api(req, res, url) {
   }
 
   // 앱(APK)이 서버 주소를 확인할 때 쓴다
-  if (p === '/api/ping' && m === 'GET') return send(res, 200, { app: 'dotori', ok: true });
+  if (p === '/api/ping' && m === 'GET') return send(res, 200, { app: 'dotori', ok: true, version: version() });
 
   if (p === '/api/me' && m === 'GET') return me ? send(res, 200, { user: publicUser(me) }) : send(res, 401, { error: 'login' });
 

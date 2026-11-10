@@ -22,8 +22,19 @@ function numberRound(L) {
   return { shown: seq.slice(0, 4), answer, options: shuffle(options), numeric: true };
 }
 
-function emojiRound(type, L) {
-  const set = shuffle(pick(PATTERN_SETS));
+// 영어판 그림 묶음: 칸마다 영어 낱말을 붙이고 읽어 준다 (기차 칸에 들어가게 짧은 낱말로)
+const EN_SETS = [
+  [['🍎', 'apple'], ['🍌', 'banana'], ['🍇', 'grapes'], ['🍋', 'lemon']],
+  [['🐶', 'dog'], ['🐱', 'cat'], ['🐷', 'pig'], ['🐻', 'bear']],
+  [['🔺', 'triangle'], ['🟦', 'square'], ['⭐', 'star'], ['🟢', 'circle']],
+  [['☀️', 'sun'], ['🌙', 'moon'], ['⭐', 'star'], ['☁️', 'cloud']],
+  [['🚗', 'car'], ['🚌', 'bus'], ['🚲', 'bike'], ['✈️', 'plane']],
+  [['🎩', 'hat'], ['🧦', 'sock'], ['👟', 'shoe'], ['🧢', 'cap']],
+];
+const EN_WORD = Object.fromEntries(EN_SETS.flat());
+
+function emojiRound(type, L, en) {
+  const set = shuffle(en ? pick(EN_SETS).map(([e]) => e) : pick(PATTERN_SETS));
   const letters = [...new Set(type)];
   const map = Object.fromEntries(letters.map((ch, i) => [ch, set[i]]));
   const len = type.length;
@@ -33,7 +44,7 @@ function emojiRound(type, L) {
   return { shown: seq.slice(0, shown), answer: seq[shown], options: shuffle(set.slice(0, Math.max(nOpt, letters.length))), numeric: false };
 }
 
-// 영어판(ctx.lang 'en'): 수를 영어로 읽어 준다
+// 영어판(ctx.lang 'en'): 기차 칸마다 영어 낱말(cat, dog…)을 붙이고 규칙을 영어로 읽어 준다. 숫자 기차는 영어로 센다
 export function mount(stage, ctx) {
   if (ctx.opts.mode === 'table') return table(stage, ctx);
   const L = ctx.level;
@@ -48,12 +59,19 @@ export function mount(stage, ctx) {
   function round() {
     hinter.reset();
     ctx.progress(n, R);
-    const r = types[n] === 'NUM' ? numberRound(L) : emojiRound(types[n], L);
-    const qCar = h('div', { class: `car q${r.numeric ? ' num' : ''}`, 'aria-label': '물음표 칸' }, '?');
+    const r = types[n] === 'NUM' ? numberRound(L) : emojiRound(types[n], L, en);
+    // 영어판 그림 칸: 그림 아래 영어 낱말, 누르면 읽어 준다
+    const words = en && !r.numeric;
+    const word = (x) => EN_WORD[x];
+    const carOf = (x) => (words
+      ? h('button', { class: 'car word', type: 'button', 'aria-label': word(x), onclick: () => speak(word(x), 'en-US') }, x, h('span', { class: 'car-word' }, word(x)))
+      : h('div', { class: `car${r.numeric ? ' num' : ''}` }, x));
+    const qCar = h('div', { class: `car q${r.numeric ? ' num' : ''}${words ? ' word' : ''}`, 'aria-label': '물음표 칸' }, '?');
     const train = h('div', { class: 'train' },
       h('div', { class: 'car engine', 'aria-hidden': 'true' }, '🚂'),
-      r.shown.map((x) => h('div', { class: `car${r.numeric ? ' num' : ''}` }, x)),
+      r.shown.map(carOf),
       qCar);
+    const sayRow = (last) => speak([...r.shown, ...(last ? [r.answer] : [])].map(r.numeric ? numEn : word).concat(last ? [] : ['What comes next?']), 'en-US');
 
     root.replaceChildren(
       train,
@@ -61,14 +79,17 @@ export function mount(stage, ctx) {
         answer: r.answer,
         hinter,
         cls: r.numeric ? 'choice' : 'choice emoji',
+        render: words ? (o) => [o, h('span', { class: 'choice-caption latin' }, word(o))] : undefined,
+        label: words ? word : undefined,
         onCorrect: (b, miss) => {
           if (miss === 0) firstTry++;
-          qCar.textContent = r.answer;
+          if (words) qCar.replaceChildren(r.answer, h('span', { class: 'car-word' }, word(r.answer)));
+          else qCar.textContent = r.answer;
           qCar.classList.remove('q');
           qCar.classList.add('fill');
           train.classList.add('chug');
           cheer(qCar);
-          if (en) speak(r.numeric ? [...r.shown, r.answer].map(numEn) : 'Choo choo! You found the pattern!', 'en-US');
+          if (en) sayRow(true);
           else speak(r.numeric ? `맞아요! ${r.shown.join(', ')}, ${r.answer}!` : '맞아요! 규칙을 찾았어요. 칙칙폭폭!');
           ctx.later(() => {
             n++;
@@ -79,8 +100,9 @@ export function mount(stage, ctx) {
       }),
     );
     ctx.prompt(
-      r.numeric ? '숫자 기차예요! 얼마씩 커지는지 찾아서 다음 수를 골라요.' : '패턴 기차의 규칙을 찾아서, 물음표 칸에 올 것을 골라요!',
-      () => (en ? speak(r.numeric ? [...r.shown.map(numEn), 'What comes next?'] : 'What comes next?', 'en-US')
+      r.numeric ? '숫자 기차예요! 얼마씩 커지는지 찾아서 다음 수를 골라요.'
+        : words ? '기차 칸의 영어 낱말을 들으며 규칙을 찾아요. 물음표 칸에 올 것을 골라요!' : '패턴 기차의 규칙을 찾아서, 물음표 칸에 올 것을 골라요!',
+      () => (en ? sayRow(false)
         : speak(r.numeric ? `${r.shown.join(', ')}, 다음은?` : '다음에 올 것은 무엇일까요?')),
     );
   }

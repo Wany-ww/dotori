@@ -411,6 +411,9 @@ body.playing .app-header { display: none; }
 .car.engine { background: var(--sub); border-color: var(--sub-deep); font-size: 50px; }
 .car.q { border-style: dashed; background: var(--sub-soft); color: var(--sub-deep); font-family: var(--font-display); }
 .car.fill { animation: pop .5s var(--spring); border-color: var(--success); background: var(--success-soft); }
+/* 영어판: 그림 아래 영어 낱말 */
+.car.word { margin-bottom: 44px; padding: 0; cursor: pointer; }
+.car-word { position: absolute; top: calc(100% + 22px); left: 50%; transform: translateX(-50%); font-family: var(--font-latin); font-weight: 700; font-size: 17px; line-height: 1; color: var(--ink); white-space: nowrap; }
 
 /* ---------- 보석 캐기 ---------- */
 .mine-top { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 660px; font-family: var(--font-display); font-size: 24px; }
@@ -496,6 +499,7 @@ body.playing .app-header { display: none; }
 .profile-age { font-family: var(--font-display); font-size: 17px; color: var(--ink-soft); }
 .profile-levels { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; font-size: 13px; color: var(--ink-soft); }
 .privacy-note { text-align: center; font-size: 15px; color: var(--ink-soft); }
+.version-line { margin: 18px 0 4px; text-align: center; font-size: 12px; color: var(--ink-soft); opacity: .75; }
 
 .join-form { display: flex; flex-direction: column; gap: 12px; }
 .field-label { font-family: var(--font-display); font-size: 21px; margin-top: 6px; }
@@ -1963,6 +1967,7 @@ body.playing .app-header { display: none; }
   .tile { width: 80px; height: 80px; font-size: 50px; }
   .char-box { width: 80px; height: 80px; font-size: 52px; }
   .car { width: 64px; height: 60px; font-size: 34px; }
+  .car-word { font-size: 13px; }
   .jewel { width: 96px; height: 96px; }
   .jewel-letter { font-size: 52px; }
   .abc { width: 62px; height: 78px; font-size: 44px; }

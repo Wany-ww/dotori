@@ -24,6 +24,27 @@ export function deviceOf(ua = '') {
   return [os, br].filter(Boolean).join(' · ') || (ua ? ua.slice(0, 30) : '-');
 }
 
+// 보호자 계정에서 로그아웃 (아이가 잘못 누르지 않게 한 번 묻는다)
+export async function logout() {
+  if (!window.confirm('보호자 계정에서 로그아웃할까요? 다시 쓰려면 아이디와 비밀번호를 넣어야 해요.')) return;
+  await sync.logout();
+  store.replaceState(null);
+  go('#/account');
+}
+
+// 버전 표시: 서버가 내보내는 화면의 커밋 · 날짜, 안드로이드 앱이면 앱 버전
+let webVersion = null;
+export function versionLine() {
+  const el = h('p', { class: 'version-line' });
+  const app = typeof window.DotoriNative?.appVersion === 'function' ? `앱 ${window.DotoriNative.appVersion()}` : null;
+  const show = (web) => { el.textContent = ['도토리숲', web, app].filter(Boolean).join(' · '); };
+  if (!sync.server) { show('체험판'); return el; }
+  show(null);
+  webVersion ||= fetch('/api/ping', { credentials: 'same-origin' }).then((r) => r.json()).then((d) => d.version).catch(() => null);
+  webVersion.then((v) => { if (v) show(`웹 ${v.commit} (${v.date.slice(0, 10)})`); });
+  return el;
+}
+
 /* ---------- 로그인 · 가입 ---------- */
 function form(fields, submitText, onSubmit) {
   const error = h('p', { class: 'acc-error', role: 'alert' });
@@ -61,7 +82,8 @@ export function viewAccount() {
         await enter(state);
       }),
       h('p', { class: 'acc-switch' }, '처음 왔나요? ', h('a', { href: '#/signup' }, '보호자 계정 만들기'))),
-    h('p', { class: 'privacy-note' }, '🔒 비밀번호는 알아볼 수 없게 바꿔서 저장해요. 학습 기록은 이 서비스의 서버에 저장돼요.'));
+    h('p', { class: 'privacy-note' }, '🔒 비밀번호는 알아볼 수 없게 바꿔서 저장해요. 학습 기록은 이 서비스의 서버에 저장돼요.'),
+    versionLine());
 }
 
 export function viewSignup() {
@@ -98,7 +120,7 @@ export function accountBar() {
   return h('section', { class: 'acc-bar' },
     h('span', {}, '👤 ', h('b', {}, sync.user.name), ` (${sync.user.username})`, sync.admin ? h('em', { class: 'acc-role' }, '관리자') : null),
     sync.admin ? h('a', { class: 'btn btn-ghost small', href: '#/admin' }, '🛠️ 관리자 화면') : null,
-    h('button', { class: 'btn btn-ghost small', type: 'button', onclick: async () => { await sync.logout(); store.replaceState(null); go('#/account'); } }, '로그아웃'),
+    h('button', { class: 'btn btn-ghost small', type: 'button', onclick: logout }, '🚪 로그아웃'),
     canImport
       ? h('div', { class: 'acc-import' },
         h('span', {}, `이 기기에 계정 없이 쓰던 아이 기록이 ${device.profiles.length}명 있어요.`),
