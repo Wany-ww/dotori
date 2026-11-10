@@ -6,14 +6,15 @@
 //   data/events/<uid>.jsonl  접속 기록과 이용 기록 (한 줄에 하나씩 쌓인다)
 //   data/works/<uid>/<id>.json · .png   자유 활동 산출물
 // 관리자 계정은 `npm run make-admin -- <아이디> <비밀번호> [이름]`으로 만든다.
+// NAS(Docker)에서는 PORT · DATA_DIR 환경 변수로 포트와 데이터 폴더를 바꾼다 (docs/nas.md).
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+const zlib = require('zlib');
 
 const root = __dirname;
 const port = Number(process.env.PORT) || 5173;
-const DATA = path.join(root, 'data');
+const DATA = path.resolve(process.env.DATA_DIR || path.join(root, 'data'));
 const SESSION_DAYS = 30;
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -54,7 +55,9 @@ function readBody(req, limit) {
 }
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').map((c) => c.trim().split('=')).filter((p) => p[0]).map(([k, ...v]) => [k, decodeURIComponent(v.join('='))]));
 const clientIp = (req) => (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || '';
-const sessionCookie = (token, maxAge) => `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+// HTTPS로 들어온 요청(NAS 역방향 프록시 뒤 포함)이면 쿠키에 Secure를 붙인다
+const secure = (req) => req.socket.encrypted || String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
+const sessionCookie = (req, token, maxAge) => `sid=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure(req) ? '; Secure' : ''}`;
 const publicUser = (u) => u && { id: u.id, username: u.username, name: u.name, role: u.role, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt };
 
 // 로그인 실패가 잦은 IP는 잠깐 막는다 (10분에 10번)
@@ -95,7 +98,7 @@ async function api(req, res, url) {
     const token = db.createSession(u.id, SESSION_DAYS);
     db.log(u.id, { type: 'signup', ip, ua });
     db.log(u.id, { type: 'login', ip, ua });
-    return send(res, 200, { user: publicUser(u) }, { 'Set-Cookie': sessionCookie(token, SESSION_DAYS * 86400) });
+    return send(res, 200, { user: publicUser(u) }, { 'Set-Cookie': sessionCookie(req, token, SESSION_DAYS * 86400) });
   }
 
   if (p === '/api/login' && m === 'POST') {
@@ -110,14 +113,17 @@ async function api(req, res, url) {
     const token = db.createSession(u.id, SESSION_DAYS);
     db.touchLogin(u.id);
     db.log(u.id, { type: 'login', ip, ua });
-    return send(res, 200, { user: publicUser(db.userById(u.id)) }, { 'Set-Cookie': sessionCookie(token, SESSION_DAYS * 86400) });
+    return send(res, 200, { user: publicUser(db.userById(u.id)) }, { 'Set-Cookie': sessionCookie(req, token, SESSION_DAYS * 86400) });
   }
 
   if (p === '/api/logout' && m === 'POST') {
     if (me) db.log(me.id, { type: 'logout', ip, ua });
     db.deleteSession(cookies(req).sid);
-    return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie('', 0) });
+    return send(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, '', 0) });
   }
+
+  // 앱(APK)이 서버 주소를 확인할 때 쓴다
+  if (p === '/api/ping' && m === 'GET') return send(res, 200, { app: 'dotori', ok: true });
 
   if (p === '/api/me' && m === 'GET') return me ? send(res, 200, { user: publicUser(me) }) : send(res, 401, { error: 'login' });
 
@@ -179,20 +185,42 @@ async function api(req, res, url) {
   return send(res, 404, { error: 'not found' });
 }
 
-/* ---------- 정적 파일 ---------- */
+/* ---------- 정적 파일 ----------
+   앱이 쓰는 파일만 내보낸다 (데이터 · 문서 · 도구 · .git은 내보내지 않음).
+   그림 · 음성은 7일 동안 기기에 두고, 코드는 바뀌었는지(ETag)만 확인해서 바깥 네트워크에서도 빠르게 열린다. */
+const PUBLIC_FILES = new Set(['/index.html', '/favicon.ico']);
+const PUBLIC_DIRS = ['/js/', '/css/', '/assets/'];
+const isPublic = (p) => !/\/\./.test(p) && (PUBLIC_FILES.has(p) || PUBLIC_DIRS.some((d) => p.startsWith(d)));
+const ZIP = new Set(['.html', '.js', '.mjs', '.css', '.svg', '.json']);
+const zipped = new Map();
+
 function serveStatic(req, res, url) {
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try { pathname = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request'); }
   if (pathname === '/') pathname = '/index.html';
   const file = path.join(root, pathname);
-  // 데이터 폴더와 서버 코드는 내보내지 않는다
-  if (!file.startsWith(root + path.sep) || file.startsWith(DATA + path.sep) || file === DATA || /server\.js$|[\\/]tools[\\/]db\.js$/.test(file)) {
-    res.writeHead(403);
-    return res.end();
-  }
-  fs.readFile(file, (err, data) => {
-    if (err) return send(res, 404, 'Not found');
-    res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
-    res.end(data);
+  if (!isPublic(pathname) || !file.startsWith(root + path.sep)) return send(res, 404, 'Not found');
+  fs.stat(file, (err, st) => {
+    if (err || !st.isFile()) return send(res, 404, 'Not found');
+    const ext = path.extname(file);
+    const etag = `"${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}"`;
+    const headers = {
+      'Content-Type': types[ext] || 'application/octet-stream',
+      ETag: etag,
+      'Cache-Control': pathname.startsWith('/assets/') ? 'public, max-age=604800' : 'no-cache',
+      'X-Content-Type-Options': 'nosniff',
+    };
+    if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers); return res.end(); }
+    const gzip = ZIP.has(ext) && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+    fs.readFile(file, (e2, data) => {
+      if (e2) return send(res, 404, 'Not found');
+      if (!gzip) { res.writeHead(200, headers); return res.end(req.method === 'HEAD' ? undefined : data); }
+      // 같은 파일은 한 번만 압축해 둔다
+      let z = zipped.get(file);
+      if (!z || z.etag !== etag) { z = { etag, body: zlib.gzipSync(data) }; zipped.set(file, z); }
+      res.writeHead(200, { ...headers, 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding' });
+      res.end(req.method === 'HEAD' ? undefined : z.body);
+    });
   });
 }
 
@@ -207,4 +235,4 @@ http
       if (!e.status) console.error(e);
     }
   })
-  .listen(port, () => console.log(`도토리숲 running at http://localhost:${port}`));
+  .listen(port, () => console.log(`도토리숲 running at http://localhost:${port} (data: ${DATA})`));

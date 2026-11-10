@@ -1,7 +1,8 @@
 // 관리자 계정 만들기 · 바꾸기: npm run make-admin -- <아이디> <비밀번호> [이름]
 // 아이디가 이미 있으면 그 계정을 관리자로 바꾸고 비밀번호를 새로 정한다.
 const path = require('path');
-const db = require('./db.js')(path.join(__dirname, '..', 'data'));
+// 서버와 같은 데이터 폴더 (NAS에서는 DATA_DIR)
+const db = require('./db.js')(path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data')));
 
 const [username, password, name = '관리자'] = process.argv.slice(2);
 if (!/^[a-z0-9_]{3,20}$/.test(username || '') || !password || password.length < 8) {

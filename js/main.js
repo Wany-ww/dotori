@@ -335,6 +335,11 @@ function viewProfile() {
       h('div', { class: 'panel-head' }, h('h2', {}, '난이도 관리'), h('span', { class: 'chip' }, '부모님용')),
       h('p', { class: 'muted' }, '한글은 14단계, 영어는 24단계(Level A ~ Z) 커리큘럼을 하루에 한 차시씩, 수학은 8단계(Level A ~ H)의 상세 단계를 2 ~ 4일씩 따라가요. 여기서 직접 바꿀 수도 있어요.'),
       h('div', { class: 'level-rows' }, Object.values(SUBJECTS).map((s) => levelRow(s)))),
+    // 안드로이드 앱에서만: 연결할 서버(NAS) 주소 바꾸기
+    window.DotoriNative ? h('section', { class: 'panel' },
+      h('div', { class: 'panel-head' }, h('h2', {}, '앱 설정'), h('span', { class: 'chip' }, '부모님용')),
+      h('p', { class: 'muted' }, `지금 연결한 서버: ${window.DotoriNative.getServer()}`),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => window.DotoriNative.changeServer() }, '🔌 서버 주소 바꾸기')) : null,
     h('section', { class: 'panel danger-zone' },
       h('h2', {}, '프로필 삭제'),
       h('p', { class: 'muted' }, '이 친구의 학습 기록, 도토리, 스티커, 앨범 작품이 모두 지워지고 되돌릴 수 없어요.'),

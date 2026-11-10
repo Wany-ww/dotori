@@ -1,0 +1,11 @@
+.git
+.claude
+data
+asset-src
+android
+docs
+design.md
+tools/voice
+tools/images
+tools/test
+node_modules

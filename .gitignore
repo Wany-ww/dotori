@@ -6,3 +6,11 @@ node_modules/
 .claude/settings.local.json
 __pycache__/
 *.log
+# 안드로이드 빌드 결과물 · 이 컴퓨터 설정
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.keystore
+android/*.jks
+dist/

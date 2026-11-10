@@ -1,0 +1,13 @@
+# NAS에서: 이 폴더에서 `docker compose up -d --build` (시놀로지는 Container Manager의 "프로젝트"로 이 파일을 열어요)
+services:
+  dotori:
+    build: .
+    container_name: dotori
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      # 아이 · 보호자 기록이 쌓이는 곳 (NAS의 이 폴더를 백업해 주세요)
+      - ./data:/app/data

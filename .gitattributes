@@ -1,0 +1,4 @@
+# 리눅스(CI)에서 돌아가도록 셸 스크립트는 LF로
+android/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
