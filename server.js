@@ -199,7 +199,8 @@ async function api(req, res, url) {
 
 /* ---------- 정적 파일 ----------
    앱이 쓰는 파일만 내보낸다 (데이터 · 문서 · 도구 · .git은 내보내지 않음).
-   그림 · 음성은 7일 동안 기기에 두고, 코드는 바뀌었는지(ETag)만 확인해서 바깥 네트워크에서도 빠르게 열린다. */
+   그림 · 음성은 7일 동안 기기에 두고, 코드 · 목록(.json)은 바뀌었는지(ETag)만 확인해서 바깥 네트워크에서도 빠르게 열린다.
+   음성 파일은 앱이 내용 해시(?v=)를 붙여 받아서, 녹음을 다시 묶어도 예전 파일이 섞이지 않는다. */
 const PUBLIC_FILES = new Set(['/index.html', '/favicon.ico']);
 const PUBLIC_DIRS = ['/js/', '/css/', '/assets/'];
 const isPublic = (p) => !/\/\./.test(p) && (PUBLIC_FILES.has(p) || PUBLIC_DIRS.some((d) => p.startsWith(d)));
@@ -219,7 +220,8 @@ function serveStatic(req, res, url) {
     const headers = {
       'Content-Type': types[ext] || 'application/octet-stream',
       ETag: etag,
-      'Cache-Control': pathname.startsWith('/assets/') ? 'public, max-age=604800' : 'no-cache',
+      // 목록 파일(.json, 음성 manifest 등)은 그림 · 음성과 함께 바뀌므로 늘 확인한다
+      'Cache-Control': pathname.startsWith('/assets/') && ext !== '.json' ? 'public, max-age=604800' : 'no-cache',
       'X-Content-Type-Options': 'nosniff',
     };
     if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers); return res.end(); }

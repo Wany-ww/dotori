@@ -63,7 +63,9 @@ export const sfx = {
 const VOICE_DIR = 'assets/voice/';
 let manifest = null;
 const buckets = new Map();
-fetch(`${VOICE_DIR}manifest.json`).then((r) => (r.ok ? r.json() : null)).then((m) => { manifest = m; }).catch(() => {});
+// 녹음을 다시 묶으면 조각 위치가 모두 바뀐다. 목록은 늘 새로 확인하고(no-cache),
+// 녹음 파일은 내용 해시(ver)를 주소에 붙여 받는다 → 기기에 남은 예전 파일과 새 목록이 섞여 소리가 끊기거나 비지 않게
+fetch(`${VOICE_DIR}manifest.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).then((m) => { manifest = m; }).catch(() => {});
 
 const clipKey = (text, lang) => `${lang.startsWith('en') ? 'en' : 'ko'}|${text.trim()}`;
 const clipOf = (text, lang) => manifest?.clips[clipKey(text, lang)];
@@ -72,7 +74,8 @@ const clipOf = (text, lang) => manifest?.clips[clipKey(text, lang)];
 function bucket(i) {
   if (!buckets.has(i)) {
     const c = ac();
-    const p = fetch(`${VOICE_DIR}${manifest.files[i]}`).then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b));
+    const v = manifest.ver?.[i];
+    const p = fetch(`${VOICE_DIR}${manifest.files[i]}${v ? `?v=${v}` : ''}`).then((r) => r.arrayBuffer()).then((b) => c.decodeAudioData(b));
     p.catch(() => buckets.delete(i));
     buckets.set(i, p);
     if (buckets.size > 24) buckets.delete(buckets.keys().next().value);
@@ -182,20 +185,26 @@ export function speak(text, lang = 'ko-KR', opts = {}) {
   // 낱말 하나하나를 짚어 주는 그림책(onboundary)은 브라우저 음성으로 읽는다
   const whole = parts.join(' ');
   const clips = !opts.onboundary && manifest ? parts.map((p) => clipOf(p, lang)) : [];
+  // 녹음 파일을 받지 못하거나 풀지 못하면(네트워크 · 오래된 파일) 조용히 끝나지 않고 기기 음성으로 읽는다
+  const play = async (list) => {
+    try {
+      for (let i = 0; i < list.length; i++) {
+        if (token !== speakToken) return;
+        await playClip(list[i], opts, token);
+        if (i < list.length - 1) await new Promise((r) => setTimeout(r, 180));
+      }
+    } catch {
+      if (token === speakToken) await tts(whole, lang, opts);
+    }
+  };
   if (!clips.length || clips.some((c) => !c)) {
-    // 문장 전체 녹음이 있으면 그것으로, 아니면 브라우저 음성
-    const all = !opts.onboundary && clipOf(whole, lang);
-    if (all) return playClip(all, opts, token);
+    // 문장 전체 녹음이 있으면 그것으로(그림책도: 낱말 짚기는 놀이가 시간으로 맞춘다), 아니면 기기 음성
+    const all = clipOf(whole, lang);
+    if (all) return play([all]);
     if (manifest) parts.forEach((p, i) => { if (!clips[i]) missed.add(clipKey(p, lang)); });
     return tts(whole, lang, opts);
   }
-  return (async () => {
-    for (let i = 0; i < clips.length; i++) {
-      if (token !== speakToken) return;
-      await playClip(clips[i], opts, token);
-      if (i < clips.length - 1) await new Promise((r) => setTimeout(r, 180));
-    }
-  })();
+  return play(clips);
 }
 
 export function stopSpeech() {

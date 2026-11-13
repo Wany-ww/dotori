@@ -50,6 +50,8 @@ for k in range(0, len(items), PER):
             pos += d
             w.write(b)
     files.append(name)
-json.dump({'files': files, 'clips': clips}, open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+# 파일마다 내용의 짧은 해시: 앱이 파일 주소 뒤에 붙여(?v=) 기기에 남은 예전 파일을 쓰지 않게 한다
+ver = [hashlib.sha1(open(os.path.join(out, f), 'rb').read()).hexdigest()[:10] for f in files]
+json.dump({'files': files, 'ver': ver, 'clips': clips}, open(os.path.join(out, 'manifest.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 total = sum(os.path.getsize(os.path.join(out, f)) for f in files)
 print('clips', len(clips), 'files', len(files), 'MB', round(total / 1e6, 1))

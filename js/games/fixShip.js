@@ -90,7 +90,7 @@ export function mount(stage, ctx) {
       dock.replaceChildren();
       ship.classList.add('fixed');
       sfx.correct();
-      say(lines.map((s) => s.text).join(' '));
+      say(lines.map((s) => s.text));
       cheer(ship, 'en');
       ctx.later(() => ship.classList.add('sail'), 1500 + lines.length * 700);
       ctx.later(() => {

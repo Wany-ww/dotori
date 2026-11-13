@@ -20,6 +20,8 @@ function bulbLine(text) {
   const el = h('p', { class: 'lu-line' }, cells);
   return {
     el,
+    // 읽어 줄 문장 (글줄의 textContent는 어절 사이 띄어쓰기가 없어 녹음을 찾지 못한다)
+    text,
     words: words.map((w) => w.replace(/[.,!?]/g, '')),
     light(hits) { hits.forEach((on, i) => { if (on) cells[i].classList.add('on'); }); },
     all() { cells.forEach((c) => c.classList.add('on')); },
@@ -55,7 +57,7 @@ export function mount(stage, ctx) {
   async function readLine(line, model) {
     if (model) {
       mic.wait('먼저 들어 봐요');
-      await speak(line.el.textContent.trim());
+      await speak(line.text.trim());
       if (!ctx.alive) return null;
     }
     line.el.classList.add('now');
@@ -110,7 +112,7 @@ export function mount(stage, ctx) {
     room.replaceChildren(h('span', { class: 'lu-art', 'aria-hidden': 'true' }, '📖'));
     const lines = ps.lines.map(bulbLine);
     board.replaceChildren(...lines.map((l) => l.el));
-    ctx.prompt('글을 한 줄씩 또박또박 소리 내어 읽어요. 다 읽으면 질문에 답해요!', () => speak(ps.lines.join(' ')), { auto: false });
+    ctx.prompt('글을 한 줄씩 또박또박 소리 내어 읽어요. 다 읽으면 질문에 답해요!', () => speak(ps.lines), { auto: false });
     for (const line of lines) {
       const res = await readLine(line, L === 1);
       if (!res || !ctx.alive) return;

@@ -39,7 +39,7 @@ D.STICKY.forEach((it) => add(it.parts.map((p) => (Array.isArray(p) ? p[0] : p)).
 D.LETTER_GALAXY.forEach((it) => { add(it.w + it.after); add(it.w); });
 D.TYPE_WORDS.flat().forEach(add); D.TYPE_SENTENCES.flat().forEach(add);
 D.KICKER_NOUNS.forEach((n) => D.KICKER_TEMPLATES.forEach((t) => { const p = D.JOSA_PAIRS[t.pair]; add(`${n.w}${D.hasBatchim(n.w) ? p[0] : p[1]} ${t.rest}`); }));
-D.EXPLAIN_RIDDLES.forEach((r) => { [...r.yes, ...r.no].forEach(add); add(`알았다! ${r.w}${D.hasBatchim(r.w) ? '이지요' : '지요'}?`); });
+D.EXPLAIN_RIDDLES.forEach((r) => { [r.w, ...r.yes, ...r.no].forEach(add); add(`알았다! ${r.w}${D.hasBatchim(r.w) ? '이지요' : '지요'}?`); });
 D.POT_RECIPES.forEach((r) => { r.items.forEach(([w]) => add(w)); add(`짜잔! ${r.out[0]}${D.hasBatchim(r.out[0]) ? '이' : '가'} 나왔어요!`); });
 Object.values(D.SYLLABLE_WORDS).flat().forEach(add);
 [...D.FLASH_SETS, ...D.SEARCH_SETS].forEach((s) => s.words.forEach(([w]) => add(w)));
@@ -191,6 +191,17 @@ const { EN_UNITS } = await import(url('js/enCurriculum.js'));
 const { enUnitOf, parseEn, article: enArt } = await import(url('js/enLesson.js'));
 const tokens = (t) => t.split(' ').map((w) => w.replace(/[^A-Za-z'’-]/g, '')).filter(Boolean);
 EC.EN_WORDS.forEach((x) => { addEn(x.w); addEn(`${x.w}!`); });
+// 보석 캐기 ("f!" · "fish starts with f.") · 무엇일까요? ("It is a dog!"): 단어마다 만든다
+const enArtWI = (w) => (/^[aeiou]/.test(w) ? 'an' : 'a');
+[...EC.EN_WORDS, ...E.PHONICS, ...E.END_WORDS, ...E.VOCAB, ...E.VOCAB2].forEach((x) => {
+  if (!/^[a-z]+$/.test(x.w)) return;
+  addEn(`${x.w} starts with ${x.w[0]}.`);
+  addEn(`${x.w} ends with ${x.w.slice(-1)}.`);
+  addEn(`It is ${enArtWI(x.w)} ${x.w}!`);
+});
+'abcdefghijklmnopqrstuvwxyz'.split('').forEach((l) => addEn(`${l}!`));
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(addEn);
+addEn('hmm?');
 Object.values(EC.EN_BANK).flat().forEach((row) => {
   const q = parseEn(row);
   addEn(q.text); addEn(q.answer); q.wrong.forEach(addEn); tokens(q.text).forEach(addEn);
@@ -205,9 +216,9 @@ Object.values(EC.EN_STORIES).forEach((b) => {
 EN_UNITS.forEach((u, i) => {
   const U = enUnitOf(i);
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((L) => { const line = U.sayFor(L); addEn(line); addEn(`${L}. ${line}`); addEn(line.replace(/\.$/, '!')); });
-  for (let k = 0; k < 4; k++) U.book().pages.forEach((pg) => { addEn(pg.text); tokens(pg.text).forEach(addEn); });
+  for (let k = 0; k < 40; k++) U.book().pages.forEach((pg) => { addEn(pg.text); tokens(pg.text).forEach(addEn); });
   // A ~ C 단계는 차시 단어로 문장을 만든다 (It is a cat. · I see a dog. · A is for apple.)
-  if (!U.sentenceUnit) for (let k = 0; k < 80; k++) U.sentences(6).forEach((q) => { addEn(q.text); addEn(q.answer); q.wrong.forEach(addEn); });
+  if (!U.sentenceUnit) for (let k = 0; k < 300; k++) U.sentences(6).forEach((q) => { addEn(q.text); addEn(q.answer); q.wrong.forEach(addEn); });
 });
 ['Put the story in order!', 'Find the missing letters!', 'Find the words!'].forEach(addEn);
 // 영어 챌린지: 제목 · 문제 안내 · 그래머 말(a cat · two cats · three big cats …) · 리스닝 문장(I see a cat.)

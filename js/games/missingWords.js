@@ -94,7 +94,7 @@ export function mount(stage, ctx) {
       float.replaceChildren();
       sfx.correct();
       cheer(page, 'en');
-      say(lines.map((s) => s.text).join(' '));
+      say(lines.map((s) => s.text));
       ctx.later(() => {
         n++;
         if (n < PAGES) round();

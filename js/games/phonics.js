@@ -63,7 +63,7 @@ export function mount(stage, ctx) {
             gemCount.textContent = n + 1;
             hole.textContent = it.letter;
             cheer(b, 'en');
-            speak(`${it.letter}! ${it.w} ${it.pos === 'start' ? 'starts' : 'ends'} with ${it.letter}.`, 'en-US');
+            speak([`${it.letter}!`, `${it.w} ${it.pos === 'start' ? 'starts' : 'ends'} with ${it.letter}.`], 'en-US');
             ctx.later(() => {
               n++;
               if (n >= R) ctx.finish({ firstTry, total: R });

@@ -34,7 +34,8 @@ export function mount(stage, ctx) {
     let roundMiss = 0;
     let bi = 0;
 
-    const say = () => speak(upper.map((c, i) => (blanks.includes(i) && !tiles[i].classList.contains('filled') ? 'hmm?' : c)).join(', '), 'en-US', { rate: 0.75 });
+    // 글자마다 녹음을 이어 읽는다 (한 줄로 이어 붙이면 녹음이 없어 기기 음성으로 읽게 된다)
+    const say = () => speak(upper.map((c, i) => (blanks.includes(i) && !tiles[i].classList.contains('filled') ? 'hmm?' : c)), 'en-US', { rate: 0.75 });
 
     function askBlank() {
       hinter.reset();
@@ -61,7 +62,7 @@ export function mount(stage, ctx) {
             return;
           }
           if (roundMiss === 0) firstTry++;
-          speak(upper.join(', '), 'en-US', { rate: 0.75 });
+          speak(upper, 'en-US', { rate: 0.75 });
           ctx.later(() => {
             n++;
             if (n >= R) ctx.finish({ firstTry, total: R });
